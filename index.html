@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="logineanimacao.js" defer type="module"></script>
     <title>Lanne.ai</title>
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -11,7 +12,10 @@
 
     <style>
         body {
-            background: linear-gradient(to bottom right, #1F203F, #B36360);
+            background: url('linhasbackground.svg') no-repeat center center,
+            linear-gradient(to bottom right, #21235F, #B36360);
+            background-attachment: fixed;
+            background-size: cover, cover;
             display: flex;
             flex-direction: column;
             align-items: center;
@@ -25,25 +29,32 @@
             text-align: center;
         }
 
-        .card {
-            position: fixed;
-            top: 50%;
-            right: -100%; /* O card começa fora da tela */
-            transform: translateY(-50%);
-            background-color: #D9D9D9;
-            border-top-left-radius: 45px; /* Canto superior esquerdo */
-            border-bottom-left-radius: 45px; /* Canto inferior esquerdo */
-            padding: 5vw;
-            width: 60vw;
-            height: 30vw;
-            /*box-shadow: 0px 0px 10px 0.2px #000000;*/
-            transition: right 1.3s ease-out; /* Animação suave para o card */
-            font-family: 'Ubuntu', sans-serif;
-            text-align: center;
+        /* PARTE DE CONFIGURAÇÃO DO CARD */
 
-            max-width: 90vw;
-            max-height: 90vh;
-        }
+        .card {
+    position: fixed;
+    top: 85px; /* Distância de 30 pixels do topo */
+    bottom: 85px;
+    right: -100%; /* O card começa fora da tela */
+    background-color: #D9D9D9;
+    border-top-left-radius: 45px; /* Canto superior esquerdo */
+    border-bottom-left-radius: 45px; /* Canto inferior esquerdo */
+    padding: 5vw;
+    width: 60vw;
+    height: auto; /* Altura automática para o conteúdo */
+    max-height: calc(100vh - 60px); /* Limita a altura máxima respeitando os 30 pixels do topo e 30 pixels da base */
+    overflow-y: auto; /* Permite rolagem vertical se o conteúdo ultrapassar a altura máxima */
+    transition: right 1.3s ease-out; /* Animação suave para o card */
+    font-family: 'Ubuntu', sans-serif;
+    text-align: center;
+
+    max-width: 90vw;
+
+    display: flex; /* Habilita o Flexbox */
+    flex-direction: column; /* Organiza os itens em coluna */
+    justify-content: center; /* Centraliza verticalmente */
+    align-items: center; /* Centraliza horizontalmente */
+}
 
         .card-icon {
             position: absolute;
@@ -58,9 +69,11 @@
             right: 0.1%; /* Quando o card é exibido */
         }
 
+        /* PARTE DE BOTAO ENTRAR E CONHECER */
+
         .card-button, .card-button2 {
             font-size: 2vw; /* Mantém o tamanho da fonte relativo */
-            padding: 0.5vw 5.5vw; /* O padding é dinâmico com base na largura da viewport */
+            padding: 0.7vw 5.5vw; /* O padding é dinâmico com base na largura da viewport */
             margin-right: 2vw; /* Ajusta a margem com base na largura da viewport */
             border-radius: 1vw; /* O raio da borda também é dinâmico */
             transition: box-shadow 0.25s, padding 0.25s; /* Transição suave para o padding */
@@ -76,13 +89,25 @@
         .card-button {
             background-color: #1F203F;
             color: #D9D9D9;
-            box-shadow: 0px 4px 2px 0px #1F203F;
+            box-shadow: 0px 3px 4px 0px rgba(0, 0, 0, 0.25);
+            transition: background-color 0.3s ease;
+        }
+
+        .card-button:hover {
+            background-color:#1A1B35;
+            color: #c0c0c0;
         }
 
         .card-button2 {
             background-color: #B0B0B0;
             color: #D9D9D9;
-            box-shadow: 0px 4px 2px 0px #B0B0B0;
+            box-shadow: 0px 3px 4px 0px rgba(0, 0, 0, 0.25);
+            transition: background-color 0.3s ease;
+        }
+
+        .card-button2:hover {
+            background-color:#949494;
+            color: #c0c0c0;
         }
 
         .card-button:disabled {
@@ -100,29 +125,35 @@
             font-size: 16px;
             padding: 10px 20px;
             width: 124px;
-            height: 30.31px;
-            transition: box-shadow 0.25s;
+            height: 30px;
             box-shadow: 0px 0px 0px 0px white;
             background-image: url('seta_vetor.svg');
             background-size: 16px 16px;
             background-position: center;
             background-repeat: no-repeat;
+
         }
+
 
 
         .button-main:hover {
             box-shadow: 0px 0px 10px 0.2px white;
         }
 
+
         .button-wrapper {
-            text-align: center;
+    display: flex; /* Flexbox para o wrapper dos botões */
+    flex-direction: row; /* Alinha os botões na horizontal */
+    justify-content: center; /* Centraliza os botões horizontalmente */
+    margin-top: 4vw; /* Espaço acima dos botões */
         }
 
+
         .button-wrapper2 {
-            display: flex;
-            flex-direction: column; /* Alinha os botões em coluna (um abaixo do outro) */
-            align-items: center; /* Centraliza os botões horizontalmente */
-        }
+    display: flex;
+    flex-direction: column; /* Alinha os botões em coluna (um abaixo do outro) */
+    align-items: center; /* Centraliza os botões horizontalmente */
+    }
 
         .bold-text {
             font-weight: bold;
@@ -131,7 +162,17 @@
         h1 {
             font-size: 3vw;
             color: #000000;
-            margin-bottom: 2vw;
+            margin-bottom: 3vw;
+            margin-top: 0;
+            font-weight: 700;
+            text-align: center;  
+        }
+
+        h5{
+            position: absolute;
+            font-size: 3vw;
+            color: #000000;
+            margin-bottom: 25vw;
             margin-top: 0;
             font-weight: 700;
             text-align: center;  
@@ -147,14 +188,14 @@
         p1 {
             font-size: 5vw;
             color: #D2D2D2;
-            margin-bottom: 1vw;
-            margin-inline-end: 0px;
+            margin-bottom: 100vw;
+            margin-top: 0;
         }
 
         p {
             font-size: 1.5vw;
             color: #D2D2D2;
-            margin-bottom: 2vw;
+            margin-bottom: 1.7vw;
             margin-top: 0;
             max-width: 40vw; /* Limita a largura máxima do parágrafo */
             word-wrap: break-word; /* Faz o texto quebrar dentro do limite */
@@ -195,8 +236,10 @@
 
         }
 
+
+        /* PARTE DE BOTAO LOGIN GOOGLE E FACE */
         .login-button {
-            background-color: #D2D2D2;
+            background-color: #1F203F;
             border: none;
             border-radius: 1vw; /* Raio da borda dinâmico */
             color: #1F203F;
@@ -204,7 +247,7 @@
             font-size: 1.5vw; /* Tamanho da fonte responsivo */
             padding: 1.5vw 3vw; /* Ajuste dinâmico para padding */
             margin: 15px;
-            box-shadow: 0vw 0.5vw 1vw 0vw #1F203F;
+            box-shadow: 0vw 0.5vw 0.6vw 0vw rgba(31, 32, 63, 0.25);
             transition: box-shadow 0.25s;
             font-weight: normal;
             width: 30vw; /* Largura proporcional ao viewport */
@@ -218,6 +261,8 @@
             justify-content: flex-start;
         }
 
+
+
         .login-button img.icon {
             width: 2vw; /* Largura proporcional à largura do viewport */
             height: auto; /* Manter a proporção original da imagem */
@@ -228,11 +273,25 @@
         .login-button.facebook {
             background-color: #3B5998; /* Cor do Facebook */
             color: #D9D9D9;
+            transition: background-color 0.3s ease;
+        }
+
+        .login-button.facebook:hover {
+            background-color: #273c66;
         }
 
         .login-button.google {
-            background-color: #FFFFFF; /* Cor do Google */
+            background-color: #ffffff; /* Cor do Google */
             color: #000000;
+            transition: background-color 0.3s ease;
+        }
+
+        .login-button.google:hover {
+            background-color: #c2c2c2;
+        }
+
+        span{
+            font-weight: bold;
         }
 
         .login-button.facebook, .login-button.google {
@@ -247,12 +306,17 @@
             margin-left: 0.5vw; /* Ajusta o espaço entre "com" e o texto em negrito */
         }
 
+        .disabled {
+    pointer-events: none; /* Desativa interações */
+    opacity: 0.5; /* Adiciona um efeito visual para indicar que está desabilitado */
+}
+
     </style>
 </head>
 <body>
     <div class="container">
         <p1 id="title">lanne.ai</p1>
-        <p id="subtitle"><i>your loyal and trustful A.I assistant</i></p>
+        <p id="subtitle"><i>Eu posso te ajudar em <span class="auto-type"></span></i></p>
         <button class="button-main" id="showCardBtn"></button>
     </div>
 
@@ -264,8 +328,8 @@
     <!-- Card que será exibido ao clicar no botão -->
     <div id="card" class="card">
         <img src="seta_vetor.svg" alt="Icone" id="backButton" class="card-icon">
-        <h1 id="hideEntrar" class="titulo">Encontre a solução para o erro que precisa!</h1>
-        <p3 id="hideEntrar2"> Pronta para te ajudar, <b>Pergunte</b> ou <b>Envie uma Imagem</b> a <i>lanne.ai</i> para te apoiar com correções de erros, dúvidas, planejamentos e muito mais.</p>
+        <h1 id="hideEntrar" class="titulo">Encontre a solução para o erro para Linux que precisa!</h1>
+        <p3 id="hideEntrar2"> Pronta para te ajudar, <b>Pergunte</b> ou <b>Envie uma Imagem</b> a <i>lanne.ai</i> será seu braço direito para correções de erros, dúvidas e muito mais.</p>
 
         <div class="button-wrapper">
             <button id="bEntrar" class="card-button">entrar</button>
@@ -274,47 +338,78 @@
 
     </div>
 
+    
+    <script src="https://unpkg.com/typed.js@2.1.0/dist/typed.umd.js"></script>
     <script>
+        // ANIMAÇÃO DE TEXTO ESCREVENDO
+        var typed = new Typed(".auto-type", { // Corrigido de 'typed' para 'Typed'
+            strings: ["Correção de erros", "Instalar pacotes", "Dicas de segurança", "Melhoria de desempenho", "tudo sobre Linux!"],
+            typeSpeed: 90,
+            backSpeed: 50,
+            loop: true
+        });
+    </script>
+
+    <script>
+        // PARTE 2 DO CARD
         document.querySelector('.card-button').addEventListener('click', function() {
-            // Altera o conteúdo do card
             const card = document.querySelector('.card');
             card.innerHTML = `
-                <h1>Bem Vindo!</h1>
+                <h5>Bem Vindo!</h5>
                 <img src="seta_vetor.svg" alt="Icone" id="backButton" class="card-icon">
                 <div class="button-wrapper2">
                     <button class="login-button facebook">
-                    <img src="facebook-icon.svg" alt="Facebook" class="icon">
-                    Faça login com<span class="bold-text">Facebook</span>
+                        <img src="facebook-icon.svg" alt="Facebook" class="icon">
+                        Faça login com<span class="bold-text">Facebook</span>
                     </button>
                     <button class="login-button google">
-                    <img src="google-icon.svg" alt="Google" class="icon">
-                    Faça login com<span class="bold-text">Google</span>
+                        <img src="google-icon.svg" alt="Google" class="icon">
+                        Faça login com<span class="bold-text">Google</span>
                     </button>
                 </div>
             `;
         });
+    </script>
+<script>
+
+    // ANIMAÇÃO DE SAIR O CARD
+    document.getElementById('backButton').addEventListener('click', function() {
+        document.getElementById('card').classList.toggle('show');
+        document.getElementById('title').classList.remove('hide');
+        document.getElementById('subtitle').classList.remove('hide');
+        document.getElementById('showCardBtn').classList.remove('hide');
+
+        // Oculta o título "Lanne.ai" no lado esquerdo
+        document.getElementById('left-title').classList.remove('show');
+        document.getElementById('left-title').classList.add('hide');
+    });
+
     
-        document.getElementById('backButton').addEventListener('click', function() {
-            document.getElementById('card').classList.toggle('show');
-            document.getElementById('title').classList.remove('hide');
-            document.getElementById('subtitle').classList.remove('hide');
-            document.getElementById('showCardBtn').classList.remove('hide');
-    
-            // Oculta o título "Lanne.ai" no lado esquerdo
-            document.getElementById('left-title').classList.remove('show');
-            document.getElementById('left-title').classList.add('hide');
-        });
-    
-        document.getElementById('showCardBtn').addEventListener('click', function() {
-            document.getElementById('card').classList.toggle('show');
-            document.getElementById('title').classList.add('hide');
-            document.getElementById('subtitle').classList.add('hide');
-            document.getElementById('showCardBtn').classList.add('hide');
-    
-            // Exibe o título "Lanne.ai" no lado esquerdo
-            document.getElementById('left-title').classList.remove('hide');
-            document.getElementById('left-title').classList.add('show');
+// ANIMAÇÃO DE APARECER O CARD
+document.getElementById('showCardBtn').addEventListener('click', function() {
+    const button = this;
+    // Adiciona a classe 'disabled' para impedir cliques
+    button.classList.add('disabled');
+    document.getElementById('card').classList.toggle('show');
+    document.getElementById('title').classList.add('hide');
+    document.getElementById('subtitle').classList.add('hide');
+    button.classList.add('hide');
+
+    document.getElementById('left-title').classList.remove('hide');
+    document.getElementById('left-title').classList.add('show');
+    const animationDuration = 900;
+    setTimeout(() => {
+        button.classList.remove('disabled'); 
+        button.classList.remove('hide');
+    }, animationDuration);
+});
+</script>
+
+    <script>
+        document.querySelector('.card-button2').addEventListener('click', function() {
+            alert('Em breve');
         });
     </script>
+
 </body>
 </html>
