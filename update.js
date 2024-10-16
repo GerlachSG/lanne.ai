@@ -20,13 +20,15 @@ const googleProvider = new GoogleAuthProvider();
 const facebookProvider = new FacebookAuthProvider();
 
 function updateUserProfile(user) {
-    const userName = user.displayName;
-    const userEmail = user.email;
     const userProfilePicture = user.photoURL;
+    const profilePictureElement = document.getElementById("userProfilePicture");
 
-    document.getElementById("userName").textContent = userName;
-    document.getElementById("userEmail").textContent = userEmail;
-    document.getElementById("userProfilePicture").src = userProfilePicture;
+    if (profilePictureElement && userProfilePicture) {
+        profilePictureElement.src = userProfilePicture;
+    } else {
+        // Defina uma imagem padrão se a URL não estiver disponível
+        profilePictureElement.src = 'caminho/para/imagem/padrao.png'; // Substitua pelo caminho da sua imagem padrão
+    }
 }
 
 // Autenticação com Popup (Google e Facebook)
@@ -40,6 +42,17 @@ function signIn(provider) {
         });
 }
 
+// Aguarda o carregamento completo do DOM
+document.addEventListener("DOMContentLoaded", () => {
+    onAuthStateChanged(auth, (user) => {
+        if (user) {
+            updateUserProfile(user);
+        } else {
+            console.log("Nenhum usuário logado");
+        }
+    });
+});
+
 
 onAuthStateChanged(auth, (user) => {
     if (user) {
@@ -48,3 +61,5 @@ onAuthStateChanged(auth, (user) => {
         console.log("Nenhum usuário logado");
     }
 });
+
+
