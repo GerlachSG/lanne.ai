@@ -79,7 +79,7 @@ document.querySelector('.card-button').addEventListener('click', function() {
 
     console.log(user);
      // PARTE DE REDIRECIONAR
-    window.location.href = "lanne.ai/chat.html";
+    window.location.href = "chat.html";
 
   })
   .catch((error) => {
