@@ -59,7 +59,7 @@ document.querySelector('.card-button').addEventListener('click', function() {
         const user = result.user;
         console.log(user);
          // PARTE DE REDIRECIONAR
-        window.location.href = "chat.html"; // Redireciona após o login
+        window.location.href = "https://igorgerlach.github.io/lanne.ai/chat.html"; // Redireciona após o login
       })
       .catch((error) => {
         const errorCode = error.code;
@@ -79,7 +79,7 @@ document.querySelector('.card-button').addEventListener('click', function() {
 
     console.log(user);
      // PARTE DE REDIRECIONAR
-    window.location.href = "chat.html";
+    window.location.href = "https://igorgerlach.github.io/lanne.ai/chat.html";
 
   })
   .catch((error) => {
