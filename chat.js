@@ -1,44 +1,42 @@
-// Função para enviar a mensagem do chat para a API
-async function enviarMensagem() {
-    const mensagem = document.getElementById("mensagem").value;
+// 1. Seleção de elementos HTML
+const messageInput = document.getElementById("message-input");
+const sendButton = document.getElementById("send-button");
+const chatContainer = document.getElementById("chat-container");
 
-    // Verifica se há histórico anterior no localStorage
-    let historico = JSON.parse(localStorage.getItem('historico')) || [];
+// 2. Função para enviar mensagem
+async function sendMessage() {
+    const message = messageInput.value.trim();
+    if (!message) return; // Verifica se há uma mensagem
 
-    const response = await fetch('/chat', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-            mensagem: mensagem,
-            historico: historico // envia o histórico anterior junto
-        })
-    });
+    try {
+        const response = await fetch("/api/send_message", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ message })
+        });
+        const data = await response.json();
 
-    const data = await response.json();
-
-    // Adiciona a nova resposta ao histórico e armazena no localStorage
-    historico.push({ role: 'user', content: mensagem });
-    historico.push({ role: 'assistant', content: data.resposta });
-    localStorage.setItem('historico', JSON.stringify(historico));
-
-    // Exibe a resposta no chat
-    document.getElementById("chat-output").innerHTML += `<p><strong>Você:</strong> ${mensagem}</p>`;
-    document.getElementById("chat-output").innerHTML += `<p><strong>Chatbot:</strong> ${data.resposta}</p>`;
+        // 3. Atualiza a interface com a resposta
+        addMessageToChat("User", message);
+        addMessageToChat("Bot", data.response);
+        messageInput.value = ""; // Limpa o campo de entrada
+    } catch (error) {
+        console.error("Erro ao enviar mensagem:", error);
+    }
 }
 
-// Função para carregar o histórico quando o usuário logar novamente
-function carregarHistorico() {
-    let historico = JSON.parse(localStorage.getItem('historico')) || [];
-    let chatOutput = document.getElementById("chat-output");
-
-    // Exibe o histórico no chat
-    historico.forEach(mensagem => {
-        let userRole = mensagem.role === 'user' ? "Você" : "Chatbot";
-        chatOutput.innerHTML += `<p><strong>${userRole}:</strong> ${mensagem.content}</p>`;
-    });
+// 4. Adiciona mensagens ao chat
+function addMessageToChat(sender, text) {
+    const messageElement = document.createElement("div");
+    messageElement.classList.add("message", sender.toLowerCase());
+    messageElement.innerText = `${sender}: ${text}`;
+    chatContainer.appendChild(messageElement);
 }
 
-// Carrega o histórico automaticamente ao abrir a página
-window.onload = carregarHistorico;
+// 5. Configurações de eventos
+sendButton.addEventListener("click", sendMessage);
+messageInput.addEventListener("keypress", (event) => {
+    if (event.key === "Enter") {
+        sendMessage();
+    }
+});
