@@ -172,6 +172,7 @@ p1 {
 
 .chat-item {
     padding: 20px;
+    cursor: pointer;
     border-radius: 10px;
     margin-bottom: 15px;
     position: relative;
@@ -180,7 +181,19 @@ p1 {
     min-height: 12vh; /* Define uma altura mínima maior para o chat */
     box-shadow: 5px 5px 5px rgba(0, 0, 0, 0.1); /* Sombra leve */
     border-radius: 8px; /* (Opcional) para cantos arredondados */
+    transition: background-color 0.3s ease, transform 0.1s ease;
     /*margin: 10px; /* (Opcional) para espaçamento externo */
+}
+
+.chat-item:hover {
+    padding: 20px;
+    transform: translateY(-2px); /* Movimento suave ao passar o mouse */
+    box-shadow: 5px 5px 3px rgba(0, 0, 0, 0.1); /* Sombra leve */
+    background-color: #f5f5f5;
+}
+
+.chat-item:active {
+    transform: translateY(0); /* Volta à posição original ao clicar */
 }
 
 .chat-item h2 {
@@ -565,47 +578,37 @@ p1 {
                 <!-- Exemplo de item de chat -->
                 <div class="chat-item blue">
                     <h2>Problema de Conexão a Internet</h2>
-                    <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nulla hendrerit vitae tortor eu scelerisque. Nam enim massa, eleifend vitae pellentesque vitae, aliquet in orci.</p>
+                    <p>Problemas ao conectar o Kali Linux 2024.1 a redes Wi-Fi após uma atualização recente. A interface de rede não é detectada, e a solução de problemas automática não resolve o problema.</p>
                     <span class="date">00d</span>
                 </div>
                 <div class="chat-item red">
-                    <h2>Título</h2>
-                    <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nulla hendrerit vitae tortor eu scelerisque. Nam enim massa, eleifend vitae pellentesque vitae, aliquet in orci.</p>
+                    <h2>Erro ao Iniciar Serviço Apache</h2>
+                    <p>Após atualização no Red Hat Enterprise Linux 9, o serviço Apache não inicia. Mensagem de erro aponta falha na configuração do virtual host.</p>
                     <span class="date">00d</span>
                 </div>
                 <div class="chat-item orange">
-                    <h2>Título</h2>
-                    <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nulla hendrerit vitae tortor eu scelerisque. Nam enim massa, eleifend vitae pellentesque vitae, aliquet in orci.</p>
+                    <h2>Problema com Drivers de Vídeo</h2>
+                    <p>Após instalar o Ubuntu 24.04 LTS, os drivers de vídeo não são reconhecidos corretamente, causando baixa resolução e lentidão no desempenho gráfico.</p>
                     <span class="date">00d</span>
                 </div>
                 <div class="chat-item green">
-                    <h2>Título</h2>
-                    <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nulla hendrerit vitae tortor eu scelerisque. Nam enim massa, eleifend vitae pellentesque vitae, aliquet in orci.</p>
+                    <h2>Falha na Instalação de Pacotes</h2>
+                    <p>Durante a instalação do openSUSE Leap 15.5, a ferramenta de gerenciamento de pacotes falha ao resolver dependências de bibliotecas críticas, interrompendo o processo.</p>
+                    <span class="date">00d</span>
+                </div>
+                <div class="chat-item orange">
+                    <h2>Travamento na Instalação de Aplicações Snap</h2>
+                    <p>Após a instalação do Ubuntu 24.04 LTS, há relatos de travamentos frequentes ao tentar instalar ou atualizar pacotes Snap, afetando a usabilidade do sistema.</p>
                     <span class="date">00d</span>
                 </div>
                 <div class="chat-item green">
-                    <h2>Título</h2>
-                    <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nulla hendrerit vitae tortor eu scelerisque. Nam enim massa, eleifend vitae pellentesque vitae, aliquet in orci.</p>
+                    <h2>Falha no Reconhecimento de Dispositivos USB</h2>
+                    <p>O openSUSE Leap 15.5 apresenta problemas no reconhecimento de dispositivos USB conectados após inicialização. Alguns drivers não carregam corretamente.</p>
                     <span class="date">00d</span>
                 </div>
                 <div class="chat-item green">
-                    <h2>Título</h2>
-                    <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nulla hendrerit vitae tortor eu scelerisque. Nam enim massa, eleifend vitae pellentesque vitae, aliquet in orci.</p>
-                    <span class="date">00d</span>
-                </div>
-                <div class="chat-item green">
-                    <h2>Título</h2>
-                    <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nulla hendrerit vitae tortor eu scelerisque. Nam enim massa, eleifend vitae pellentesque vitae, aliquet in orci.</p>
-                    <span class="date">00d</span>
-                </div>
-                <div class="chat-item green">
-                    <h2>Título</h2>
-                    <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nulla hendrerit vitae tortor eu scelerisque. Nam enim massa, eleifend vitae pellentesque vitae, aliquet in orci.</p>
-                    <span class="date">00d</span>
-                </div>
-                <div class="chat-item green">
-                    <h2>Título</h2>
-                    <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nulla hendrerit vitae tortor eu scelerisque. Nam enim massa, eleifend vitae pellentesque vitae, aliquet in orci.</p>
+                    <h2>Erro ao Montar Partições NTFS</h2>
+                    <p>No openSUSE Leap 15.5, ocorre falha ao tentar montar partições NTFS de discos externos. A mensagem de erro sugere problemas com permissões ou falta de suporte de drivers.</p>
                     <span class="date">00d</span>
                 </div>
             </section>
