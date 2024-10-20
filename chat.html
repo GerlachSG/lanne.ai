@@ -182,7 +182,7 @@ p1 {
     position: relative;
     background-color: #FFFFFF;
     max-height: 150vh;  
-    min-height: 12vh; /* Define uma altura mínima maior para o chat */
+    min-height: 19vh; /* Define uma altura mínima maior para o chat */
     box-shadow: 5px 5px 5px rgba(0, 0, 0, 0.1); /* Sombra leve */
     border-radius: 8px; /* (Opcional) para cantos arredondados */
     transition: background-color 0.3s ease, transform 0.1s ease;
@@ -519,8 +519,8 @@ p1 {
 }
 
 #userProfilePicture {
-    width: 40px; /* Defina a largura desejada */
-    height: 40px; /* Defina a altura desejada */
+    width: 35px; /* Defina a largura desejada */
+    height: 35px; /* Defina a altura desejada */
     border-radius: 50%; /* Para torná-la circular */
     object-fit: cover; /* Para cobrir a área da imagem */
 }
@@ -543,6 +543,7 @@ p1 {
 
 .theme {
     margin-bottom: 4vh;
+
 }
 
 .logo {
@@ -576,11 +577,11 @@ p1 {
             <button class="sidebar-button home">
                 <i class="fas fa-home"></i> <img src="home-icon.svg">
             </button>
-            <button class="sidebar-button theme">
-                <i class="fas fa-theme"></i> <img src="dark-theme-icon.svg">
-            </button>
             <button class="sidebar-button user">
                 <img id="userProfilePicture" alt="User  Profile Picture" style="width: 40px; height: 40px; border-radius: 50%;">
+            </button>
+            <button class="sidebar-button theme">
+                <i class="fas fa-theme"></i> <img src="dark-theme-icon.svg">
             </button>
             <button class="sidebar-button logout">
                 <i class="fas fa-sign-out-alt"></i> <img src="logout-icon.svg">
@@ -629,13 +630,13 @@ p1 {
                 </div>
                 <div class="chat-item orange">
                     <img src="ubuntu.svg" alt="Ubuntu Icon" style="position: absolute; top: 10px; left: -24px;">
-                    <h2>Travamento na Instalação de Aplicações Snap</h2>
+                    <h2>Instalação de Aplicações Snap</h2>
                     <p>Após a instalação do Ubuntu 24.04 LTS, há relatos de travamentos frequentes ao tentar instalar ou atualizar pacotes Snap, afetando a usabilidade do sistema.</p>
                     <span class="date">00d</span>
                 </div>
                 <div class="chat-item green">
                     <img src="susy.svg" alt="Susy Icon" style="position: absolute; top: 8px; left: -27px;">
-                    <h2>Falha no Reconhecimento de Dispositivos USB</h2>
+                    <h2>Reconhecimento de Dispositivos USB</h2>
                     <p>O openSUSE Leap 15.5 apresenta problemas no reconhecimento de dispositivos USB conectados após inicialização. Alguns drivers não carregam corretamente.</p>
                     <span class="date">00d</span>
                 </div>
