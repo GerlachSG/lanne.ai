@@ -8,7 +8,8 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Ubuntu:ital,wght@0,300;0,400;0,500;0,700;1,300;1,400;1,500;1,700&display=swap" rel="stylesheet">
-    
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0&icon_names=content_copy" />
+
     <style>
 * {
     margin: 0;
@@ -16,9 +17,50 @@
     box-sizing: border-box;
 }
 
+:root {
+    /* Cores do tema claro */
+    --container-background: #1b1e34;
+    --background-color: #ffffff; /* branco */
+    --text-color: #000000; /* cinza escuro */
+    --bot-text: #333333;
+    --link-color: #1a0dab; /* azul */
+    --button-background: #f0f0f0; /* cinza muito claro */
+    --button-hover: #f1f1ff; /* cinza claro para hover */
+    --button-send: #1D2142;
+    --thinking: #111325;
+    --chat-color: #e2e4f3;
+    --scroll-bar: #c0c0c8;
+    --item-color: #666;
+    --border:#1D2142;
+    --input-bar: #696e94;
+    --btn-sidebar: #fff;
+}
+
+.dark-mode {
+    /* Cores do tema escuro */
+    --container-background: #0c0d18;
+    --background-color: #121212; /* fundo escuro */
+    --text-color: #e0e0e0; /* texto claro */
+    --bot-text: #fff;
+    --link-color: #8ab4f8; /* azul claro */
+    --button-background: #131313; /* botão escuro */
+    --button-hover: #272727; /* botão escuro mais claro para hover */
+    --button-send: #545ca7;
+    --thinking: #7280fa;
+    --chat-color: #202020;
+    --scroll-bar: #1d1d1d;
+    --item-color: #666;
+    --input-bar: #525aa3;
+    --border:#525aa3;
+    --btn-sidebar: #8b8b8b;
+}
+
+/* var(--thinking) */
+
+
 body {
     font-family: 'Ubuntu', sans-serif;
-    background-color: #f4f4f4;
+    background-color: var(--background-color);
     height: 100vh;
 }
 
@@ -30,7 +72,7 @@ p1 {
 .container {
     display: flex;
     height: 100vh;
-    background-color: #1b1e34;
+    background-color: var(--container-background);
 }
 
 .menu-item {
@@ -43,7 +85,7 @@ p1 {
     align-items: center;
     justify-content: center;
     cursor: pointer;
-    color: white;
+    color: var(--text-color);
     font-size: 24px;
 }
 
@@ -98,7 +140,7 @@ p1 {
 
 .chat-area { /* Histórico de Chats */
     flex: 0.4;
-    background-color: white;
+    background-color: var(--background-color);
     padding: 20px;
     padding-top: 35px;  
     padding-right: 15px;
@@ -110,30 +152,13 @@ p1 {
     margin-bottom: 15px;
 }
 
-.message-area { /* Conversas com a IA  */
-    flex: 1px;
-    background-color: #ffffff;
-    display: flex;
-    flex-direction: column;
-    justify-content: flex-end;
-    /*justify-content: space-between; */
-    border-left: 1px solid #ccc;
-    padding: 20px;
-    padding-left: 25px;
-    border-radius: 0 20px 20px 0;
-    /* box-shadow: -2px 0 10px rgba(0, 0, 0, 0.1); */
-    margin-top: 73px;
-    margin-right: 15px;
-    margin-bottom: 15px;
-}
-
 .chat-header {
     margin-bottom: 20px;
 }
 
 .chat-header p1 {
     font-size: 40px;
-    color: #333;
+    color: var(--text-color);
     margin-bottom: 10px;
 }
 
@@ -145,33 +170,48 @@ p1 {
 
 .search-bar input {
     padding: 0.8vw;
-    border: 0.5px solid #1D2142; /* #ccc; */
+    border: 0.5px solid var(--border); /* #ccc; */
     border-radius: 12px;
     outline: none;
     font-size: 17px;
     flex: 1;
+    background: var(--background-color);
+    color: var(--text-color);
 }
 
 .search-bar button {
     padding: 0.52vw;
-    background-color: #FFFFFF;
-    border: 0.5px solid #1D2142; /* #ccc; */
+    background-color: var(--background-color);
+    border: 0.5px solid var(--border); /* #ccc; */
     /*color: #FFFFFF;*/
     border-radius: 12px;
     cursor: pointer;
     margin-left: 0.4vw;
 }
 
-.search-bar button:hover {
-    background-color: #f5f5f5;
-}    
+button .icon-path {
+    fill: var(--border); /* Usa a variável definida no tema */
+}
+
+.logout .icon-path {
+    fill: var(--btn-sidebar); /* Usa a variável definida no tema */
+}
+
+.home .icon-path {
+    fill: var(--btn-sidebar); /* Usa a variável definida no tema */
+}
+
+.bars .icon-path {
+    fill: var(--btn-sidebar); /* Usa a variável definida no tema */
+}
+
 
 .chat-list {
     overflow-y: auto;
     max-height: 85vh;
     padding-right: 10px;
     scrollbar-width: thin;
-    scrollbar-color: #1b1e34 #c0c0c8; 
+    scrollbar-color: var(--border) var(--scroll-bar);  /* !!!!!!!!! */
 }
 
 .chat-item {
@@ -180,20 +220,19 @@ p1 {
     border-radius: 12px;
     margin-bottom: 15px;
     position: relative;
-    background-color: #FFFFFF;
+    background-color: var(--button-background);
     max-height: 150vh;  
     min-height: 19vh; /* Define uma altura mínima maior para o chat */
     box-shadow: 5px 5px 5px rgba(0, 0, 0, 0.1); /* Sombra leve */
     border-radius: 8px; /* (Opcional) para cantos arredondados */
     transition: background-color 0.3s ease, transform 0.1s ease;
-    /*margin: 10px; /* (Opcional) para espaçamento externo */
 }
 
 .chat-item:hover {
     padding: 20px;
     transform: translateY(-2px); /* Movimento suave ao passar o mouse */
     box-shadow: 5px 5px 3px rgba(0, 0, 0, 0.1); /* Sombra leve */
-    background-color: #f5f5f5;
+    background-color: var(--button-hover);
 }
 
 .chat-item:active {
@@ -203,11 +242,12 @@ p1 {
 .chat-item h2 {
     margin-bottom: 5px;
     font-size: 18px;
+    color: var(--text-color);
 }
 
 .chat-item p {
     font-size: 14px;
-    color: #666;
+    color: var(--item-color);
 
 }
 
@@ -229,7 +269,7 @@ p1 {
 
 .chatbot-popup {
     flex: 0.58;
-    background-color: white;
+    background-color: var(--background-color);
     padding: 10px;  
     display: flex;
     flex-direction: column;
@@ -237,7 +277,7 @@ p1 {
     box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
     margin-top: 73px;
     margin-bottom: 15px;
-    height: calc(100vh - 73px - 15px); /* Ajusta a altura total */
+    /* Removi o height */
 }
 
 .chat-body {
@@ -266,7 +306,7 @@ p1 {
 .chat-body .message .message-text {
     padding: 12px 16px;
     max-width: 75%;
-    background: #f2f2ff;
+    background: var(--background-color);
 
 }
 
@@ -275,14 +315,74 @@ p1 {
 }
 
 .chat-body .bot-message .message-text {
-    color: #000;
-    background: #e2e4f3;
+    color: var(--bot-text);
+    background: var(--chat-color);
     border-radius: 13px 13px 13px 3px;
+    white-space: pre-wrap;
 }
+
+/* ESTILIZAÇÃO DO TEXTO */
+.chat-body .bot-message .title {
+    font-size: 1.5em; /* Tamanho grande para o título */
+    font-weight: bold; /* Negrito */
+    margin-bottom: 10px; /* Espaço abaixo do título */
+    color: var(); /* Cor do título */
+}
+
+.chat-body .bot-message .subtitle {
+    font-size: 1.2em; /* Tamanho médio para o subtítulo */
+    font-weight: bold; /* Negrito */
+    margin-bottom: 8px; /* Espaço abaixo do subtítulo */
+    color: #555; /* Cor do subtítulo */
+}
+
+.chat-body .bot-message .message-text {
+    color: var(--bot-text);
+    background: var(--chat-color);
+    border-radius: 13px 13px 13px 3px;
+    white-space: pre-wrap;
+    margin-bottom: 10px; /* Espaçamento entre as mensagens */
+}
+
+pre {
+    background-color: #2d2d2d;
+    color: #f8f8f2;
+    padding: 15px;
+    border-radius: 5px;
+    overflow-x: auto;
+    font-family: 'Courier New', Courier, monospace;
+}
+
+code {
+    background-color: #272727;
+    color: #ffffff;
+    padding: 2px 6px;
+    border-radius: 3px;
+}
+
+.chat-body pre {
+    background-color: #272727; /* Cor de fundo suave */
+    border: 1px solid #ddd; /* Borda leve */
+    border-radius: 4px; /* Arredondar bordas */
+    padding: 10px; 
+    overflow-x: auto; 
+    color: #333; 
+    font-family: 'Courier New', Courier, monospace; 
+}
+
+/* Estilo para o código inline */
+.chat-body code {
+    padding: 2px 4px; /* Espaçamento interno */
+    border-radius: 3px; /* Bordas arredondadas */
+    color: #c0c0c0; /* Cor do texto para código inline */
+}
+
+/* FIM ESTILIZAÇÃO */
+
 
 .chat-body .user-message .message-text {
     color: #fff;
-    background: #1D2142;
+    background: var(--button-send);
     border-radius: 13px 13px 3px 13px;
 }
 
@@ -297,7 +397,7 @@ p1 {
     width: 7px;
     opacity: 0.7;
     border-radius: 50%;
-    background: #111325;
+    background: var(--thinking);
     animation: dotPulse 1.8s ease-in-out infinite;
 }
 
@@ -331,7 +431,7 @@ p1 {
 
 .chat-footer {
     width: 100%;
-    background: #fff;
+    background: var(--background-color);
     padding: 15px 22px 20px;
     position: relative; /* Para manter a posição do footer */
 }
@@ -339,9 +439,9 @@ p1 {
 .chat-footer .chat-form {
     display: flex;
     align-items: center;
-    background: #fff;
+    background: var(--background-color);
     border-radius: 10px;
-    outline: 1.3px solid #696e94;
+    outline: 1.3px solid var(--input-bar);
 }
 
 .chat-footer .chat-form:focus-within {
@@ -357,6 +457,8 @@ p1 {
     font-size: 0.94rem;
     padding: 14px 0 13px 18px;
     border-radius: inherit;
+    background-color: var(--background-color);
+    color: var(--bot-text);
 }
 
 .chat-form .chat-controls {
@@ -367,13 +469,17 @@ p1 {
     padding-right: 6px;
 }
 
+.enviar .icon-path {
+    fill: var(--border);
+}
+
 .chat-form .chat-controls button {
     height: 33px;
     width: 33px;
     border: none;
     font-size: 1.15rem;
     cursor: pointer;
-    color: #1D2142;
+    color: var(--button-send);
     background: none;
     border-radius: 20%;
     transition: 0.2s ease;
@@ -390,67 +496,16 @@ p1 {
 }
 
 .chat-form .chat-controls #send-message:hover {
-    background: #e6e6e6;
+    background: var(--button-hover);
 }
 
 .chat-form .chat-controls button:hover {
-    background: #f1f1ff;
+    background: var(--button-hover);
 }
+
+
 
 /* FIM CHATS */
-
-/* CÓDGIOS ANTIGOS BACKUP
-
-.message-container {
-    flex: 1;
-    overflow-y: auto;
-    margin-bottom: 20px;
-}
-
-.message {
-    padding: 12px 18px;
-    margin-bottom: 15px;
-    border-radius: 12px;
-    max-width: 80%;
-    word-wrap: break-word;
-    font-size: 14px;
-}
-
-.incoming {
-    background-color: #ddd;
-    align-self: flex-start;
-}
-
-.outgoing {
-    background-color: #007bff;
-    color: white;
-    align-self: flex-end;
-}
-
-.message-input {
-    display: flex;
-    align-items: center;
-}
-
-.message-input input {
-    flex: 1;
-    padding: 12px;
-    border-radius: 15px;
-    border: 1px solid #979797;
-    outline: none;
-    font-size: 14px;
-}
-
-.message-input button {
-    margin-left: 10px;
-    background-color: #007bff;
-    border: none;
-    padding: 12px;
-    color: white;
-    border-radius: 50%;
-    cursor: pointer;
-}
- */
 
 
 .sidebar {
@@ -472,7 +527,7 @@ p1 {
     min-width: 40px;
     min-height: 40px;
 
-    background-color: #1b1e34; /* Cor de fundo do botão */
+    background-color: var(--container-background); /* Cor de fundo do botão */
     border: none; /* Remove bordas padrão */
     border-radius: 7px; /* Cantos arredondados */
     margin-bottom: 20px; /* Espaço entre os botões */
@@ -491,7 +546,6 @@ p1 {
 }
 
 .sidebar-button:hover {
-    background-color: #1b1e34; /* Cor de fundo ao passar o mouse */
     transform: translateY(-3px); /* Movimento suave ao passar o mouse */
 }
 
@@ -558,6 +612,29 @@ p1 {
 
 }
 
+.image-container {
+    position: relative;
+    display: inline-block;
+}
+
+.overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.5); /* Escurecendo a imagem */
+    display: none; /* Oculto por padrão */
+}
+
+.dark-mode .overlay {
+    display: block; /* Mostra no modo escuro */
+}
+
+.light-mode .overlay {
+    display: none; /* Esconde no modo claro */
+}
+
 </style>
 </head>
 <body>
@@ -569,23 +646,38 @@ p1 {
         <!-- Barra lateral -->
         <div class="sidebar">
             <button class="sidebar-button bars">
-                <i class="fas fa-bars"></i> <img src="menu-icon.svg">
+                <i class="fas fa-bars"></i>
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M3 18V16H21V18H3ZM3 13V11H21V13H3ZM3 8V6H21V8H3Z" class="icon-path"/>
+                </svg>
             </button>
             <button class="sidebar-button plus">
                 <i class="fas fa-add-chat"></i> <img src="plus-icon.svg">
             </button>
             <button class="sidebar-button home">
-                <i class="fas fa-home"></i> <img src="home-icon.svg">
-            </button>
+                <i class="fas fa-home"></i>
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M6 19H9V13H15V19H18V10L12 5.5L6 10V19ZM4 21V9L12 3L20 9V21H13V15H11V21H4Z" class="icon-path"/>
+                </svg>
+            </button>            
             <button class="sidebar-button user">
-                <img id="userProfilePicture" alt="User  Profile Picture" style="width: 40px; height: 40px; border-radius: 50%;">
+                <div class="image-container">
+                    <img id="userProfilePicture" alt="User Profile Picture" style="width: 40px; height: 40px; border-radius: 50%;">
+                    <div class="overlay"></div>
+                </div>
+            </button>            
+            <button id="toggle-theme-button" class="sidebar-button theme">
+                <img id="theme-icon" src="dark-theme-icon.svg" alt="Tema">
             </button>
-            <button class="sidebar-button theme">
-                <i class="fas fa-theme"></i> <img src="dark-theme-icon.svg">
+            
             </button>
             <button class="sidebar-button logout">
-                <i class="fas fa-sign-out-alt"></i> <img src="logout-icon.svg">
+                <i class="fas fa-sign-out-alt"></i>
+                <svg width="38" height="38" viewBox="0 0 38 38" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M12 28C11.45 28 10.9792 27.8042 10.5875 27.4125C10.1958 27.0208 10 26.55 10 26V12C10 11.45 10.1958 10.9792 10.5875 10.5875C10.9792 10.1958 11.45 10 12 10H19V12H12V26H19V28H12ZM23 24L21.625 22.55L24.175 20H16V18H24.175L21.625 15.45L23 14L28 19L23 24Z" class="icon-path" fill="#E8EAED"/>
+                </svg>
             </button>
+            
         </div>
         
         
@@ -597,10 +689,13 @@ p1 {
                     <input type="text" placeholder="Procurar" />
                     <button>
                         <i class="fas fa-filter"></i>
-                        <img src="filter-icon.svg" alt="Filtro" style="width: 25px; height: 25px;">
-                    </button>
+                        <svg width="26" height="25" viewBox="0 0 26 25" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M11.8113 21.2359V15.1793H13.8302V17.1982H21.9057V19.2171H13.8302V21.2359H11.8113ZM3.73584 19.2171V17.1982H9.79245V19.2171H3.73584ZM7.77358 15.1793V13.1604H3.73584V11.1416H7.77358V9.12271H9.79245V15.1793H7.77358ZM11.8113 13.1604V11.1416H21.9057V13.1604H11.8113ZM15.8491 9.12271V3.0661H17.8679V5.08497H21.9057V7.10384H17.8679V9.12271H15.8491ZM3.73584 7.10384V5.08497H13.8302V7.10384H3.73584Z" class="icon-path" fill-opacity="0.75"/>
+                        </svg>
+                    </button>                                      
                 </div>
-            </header>
+            </header> 
+
             
             <section class="chat-list">
                 <!-- Exemplo de item de chat -->
@@ -662,7 +757,11 @@ p1 {
                      class="message-input" required></textarea>
                     <div class="chat-controls">
                         <button type="submit" id="send-message" class="enviar">
-                            <img src="enviar-icon.svg"></button>
+                            <svg width="32" height="28" viewBox="0 0 32 28" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M9.3287 23.609L9.19849 5.85205L29.4457 14.5826L9.3287 23.609ZM11.4287 20.264L23.9753 14.6227L11.3473 9.16591L11.3758 13.0503L17.7613 14.6682L11.4002 16.3797L11.4287 20.264Z" class="icon-path"/>
+                            </svg>
+                        </button>
+                                               
                     </div>
                     
                 </form>
@@ -673,6 +772,38 @@ p1 {
 
     <script src="java-ia.js"></script>
     <script type="module" src="update.js"></script>
+
+    <script type="module">
+        // LOGOUT DA PÁGINA
+
+        // Inicialize o Firebase no chat.html
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.2/firebase-app.js";
+        import { getAuth, signOut } from "https://www.gstatic.com/firebasejs/10.13.2/firebase-auth.js";
+      
+        const firebaseConfig = {
+          apiKey: "AIzaSyCs-wr2q_TIlszjkAZD_xcw1lPL0gts1YU",
+          authDomain: "login-lanne.firebaseapp.com",
+          projectId: "login-lanne",
+          storageBucket: "login-lanne.appspot.com",
+          messagingSenderId: "1086334391009",
+          appId: "1:1086334391009:web:447dc5dbf6319c9599dda0"
+        };
+      
+        // Inicialize o Firebase
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+      
+        // Adiciona o event listener no botão de logout
+        document.querySelector('.sidebar-button.logout').addEventListener('click', function() {
+          signOut(auth).then(() => {
+            // Redireciona para a página de login após o logout
+            window.location.href = "index.html";
+          }).catch((error) => {
+            console.error("Erro ao fazer logout:", error);
+          });
+        });
+      </script>
+      
     
 </body>
 </html>
