@@ -442,7 +442,8 @@ p1 {
     padding-top: 20px;
     display: flex;
     flex-direction: column; /* Disposição vertical dos botões */
-    justify-content: space-between; /* Distribui os botões proporcionalmente */
+    align-items: flex-start;
+    justify-content: flex-start; /* Distribui os botões proporcionalmente */
     align-items: center;
     height: 100vh; /* Ocupa toda a altura da tela */
 }
@@ -463,7 +464,7 @@ p1 {
     justify-content: center;
     cursor: pointer;
     transition: background-color 0.3s ease, transform 0.3s ease; /* Animação de cor e movimento */
-    box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.1); /* Sombra suave */
+    /*box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.1); /* Sombra suave */
 }
 
 
@@ -483,16 +484,17 @@ p1 {
 }
 
 .bars {
-    margin-bottom: 100px;
+    margin-bottom: 16.69vh;
 }
 
 .home {
-    margin-bottom: 550px;
+    margin-bottom: 37.81vh;
 }
 
 .plus {
     background-color: #ffffff; /* Fundo branco */
     color: #1b1e34; /* Cor do ícone escura para contraste */
+    margin-bottom: 3.33vh;
 }
 
 .plus i {
