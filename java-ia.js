@@ -9,6 +9,14 @@ const userData = {
     message: null
 };
 
+// Contexto de como agir
+const chatHistory = [
+    {
+        role: "system",
+        parts: [{ text: "Você é uma IA especializada em Linux, que se chama Lanne. Responda com informações detalhadas sobre sistemas operacionais Linux, comandos de terminal, troubleshooting, e melhores práticas em ambientes Linux, também guiando o usuário a resolver qualquer problema relacionado a Linux." }]
+    }
+];
+
 // Cria o elemento de mensagem com classes dinâmicas e o retorna
 const createMessageElement = (content, ...classes) => {
     const div = document.createElement("div");
