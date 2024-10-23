@@ -43,11 +43,11 @@
     --text-color: #e0e0e0; /* texto claro */
     --bot-text: #fff;
     --link-color: #8ab4f8; /* azul claro */
-    --button-background: #131313; /* botão escuro */
+    --button-background: #1d1d1d; /* botão escuro */
     --button-hover: #272727; /* botão escuro mais claro para hover */
     --button-send: #545ca7;
     --thinking: #7280fa;
-    --chat-color: #202020;
+    --chat-color: #1d1d1d;
     --scroll-bar: #1d1d1d;
     --item-color: #666;
     --input-bar: #525aa3;
@@ -211,7 +211,7 @@ button .icon-path {
     max-height: 85vh;
     padding-right: 10px;
     scrollbar-width: thin;
-    scrollbar-color: var(--border) var(--scroll-bar);  /* !!!!!!!!! */
+    scrollbar-color: var(--border) var(--scroll-bar);
 }
 
 .chat-item {
@@ -290,6 +290,8 @@ button .icon-path {
     overflow-y: auto; /* Permite rolagem */
     flex-direction: column;
     justify-content: flex-start; /* Garante que as mensagens fiquem na parte superior */
+    scrollbar-width: thin;
+    scrollbar-color: var(--border) var(--scroll-bar);
 }
 
 .chat-body .message {
@@ -606,9 +608,9 @@ code {
     right: 27px;
     width: 55px;*/
 
-    top: 2.83vh;
+    top: 2.20vh;
     right: 1.97vw;
-    width: 4.02vw;
+    width: 3.5vw;
 
 }
 
