@@ -4,7 +4,7 @@ const sendMessageButton = document.querySelector("#send-message");
 const toggleThemeButton = document.querySelector("#toggle-theme-button");
 
 
-const API_KEY = "AIzaSyAmRWWP4M2DrGMgmNSRo3SnCf4oV00va5A";
+const API_KEY = "AIzaSyAUVVIfbAIW6_mEuVkEjhN47Yo8VTlxQ8M";
 const API_URL=`https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key=${API_KEY}`;
 
 const userData = {
