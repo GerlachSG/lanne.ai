@@ -1,0 +1,440 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chatbox IA Assistente</title>
+    
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Ubuntu:ital,wght@0,300;0,400;0,500;0,700&display=swap" rel="stylesheet">
+    
+    <style>
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: Arial, sans-serif;
+    background-color: #f4f4f4;
+    height: 100vh;
+    font-family: 'Ubuntu', sans-serif;
+}
+
+p1 {
+    font-size: 3.2vw;
+    font-weight: lighter;
+}
+
+.container {
+    display: flex;
+    height: 100vh;
+    background-color: #1b1e34;
+}
+
+.menu-item {
+    width: 40px;
+    height: 40px;
+    background-color: #555;
+    border-radius: 8px;
+    margin-bottom: 30px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    color: white;
+    font-size: 24px;
+}
+
+.menu-item i {
+    font-size: 24px;
+}
+
+.chat-list {
+    overflow-y: auto;
+    max-height: 85vh;
+    padding-right: 10px;
+    scrollbar-width: thin; /* Para Firefox */
+    scrollbar-color: #1b1e34 transparent; /* Para Firefox */
+}
+
+/* Para navegadores baseados em WebKit (Chrome, Edge, Safari) */
+.chat-list::-webkit-scrollbar {
+    width: 10px; /* Define a largura do scrollbar */
+}
+
+.chat-list::-webkit-scrollbar-track {
+    background-color: transparent; /* Deixa o track transparente */
+}
+
+.chat-list::-webkit-scrollbar-thumb {
+    background-color: #1b1e34; /* Cor da barra de rolagem (thumb) */
+    border-radius: 20px; /* Arredondamento da barra */
+    border: 3px solid rgba(0, 0, 0, 0); /* Espaçamento transparente */
+}
+
+.chat-list::-webkit-scrollbar-thumb:hover {
+    background-color: #555; /* Cor ao passar o mouse */
+}
+
+/* Aumentar a compatibilidade para o Edge */
+.chat-list::-ms-scrollbar {
+    width: 10px;
+}
+
+.chat-list::-ms-scrollbar-track {
+    background-color: transparent;
+}
+
+.chat-list::-ms-scrollbar-thumb {
+    background-color: #1b1e34;
+    border-radius: 20px;
+}
+
+.chat-list::-ms-scrollbar-thumb:hover {
+    background-color: #555;
+}
+
+.chat-area {
+    flex: 0.6;
+    background-color: white;
+    padding: 20px;  
+    display: flex;
+    flex-direction: column;
+    border-radius: 20px 0 0 20px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    margin-top: 73px;
+    margin-bottom: 15px;
+}
+
+.chat-header {
+    margin-bottom: 20px;
+}
+
+.chat-header h1 {
+    font-size: 24px;
+    color: #333;
+    margin-bottom: 10px;
+}
+
+.search-bar {
+    display: flex;
+    align-items: center;
+}
+
+.search-bar input {
+    padding: 0.8vw;
+    border: 1px solid #ccc;
+    border-radius: 10px 0 0 10px;
+    outline: none;
+    font-size: 14px;
+    flex: 1;
+}
+
+.search-bar button {
+    padding: 1.5vw;
+    background-color: #007bff;
+    border: none;
+    color: white;
+    border-radius: 0 10px 10px 0;
+    cursor: pointer;
+}
+
+.chat-list {
+    overflow-y: auto;
+    max-height: 85vh;
+    padding-right: 10px;
+    scrollbar-width: thin;
+    scrollbar-color: #1b1e34 #c0c0c8; 
+}
+
+.chat-item {
+    padding: 15px;
+    border-radius:9px;
+    margin-bottom: 15px;
+    position: relative;
+    background-color: #f9f9f9;
+    max-height: 150vh;  
+    min-height: 10vh; /* Define uma altura mínima maior para o chat */
+    box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.1); /* Sombra leve */
+    border-radius: 8px; /* (Opcional) para cantos arredondados */
+    margin: 10px; /* (Opcional) para espaçamento externo */
+}
+
+.chat-item h2 {
+    margin-bottom: 5px;
+    font-size: 18px;
+}
+
+.chat-item p {
+    font-size: 14px;
+    color: #666;
+
+}
+
+.chat-item .date {
+    position: absolute;
+    right: 15px;
+    top: 15px;
+    font-size: 12px;
+    color: #aaa;
+}
+
+.chat-item.blue { border-left: 24px solid #007bff; }
+.chat-item.red { border-left: 24px solid #dc3545; }
+.chat-item.orange { border-left: 24px solid #fd7e14; }
+.chat-item.green { border-left: 24px solid #28a745; }
+
+.message-area {
+    flex: 1px;
+    background-color: #ffffff;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    border-left: 1px solid #ccc;
+    padding: 20px;
+    border-radius: 0 20px 20px 0;
+    /* box-shadow: -2px 0 10px rgba(0, 0, 0, 0.1); */
+    margin-top: 73px;
+    margin-right: 15px;
+    margin-bottom: 15px;
+}
+
+.message-container {
+    flex: 1;
+    overflow-y: auto;
+    margin-bottom: 20px;
+}
+
+.message {
+    padding: 12px 18px;
+    margin-bottom: 15px;
+    border-radius: 12px;
+    max-width: 80%;
+    word-wrap: break-word;
+    font-size: 14px;
+}
+
+.incoming {
+    background-color: #ddd;
+    align-self: flex-start;
+}
+
+.outgoing {
+    background-color: #007bff;
+    color: white;
+    align-self: flex-end;
+}
+
+.message-input {
+    display: flex;
+    align-items: center;
+}
+
+.message-input input {
+    flex: 1;
+    padding: 12px;
+    border-radius: 15px;
+    border: 1px solid #979797;
+    outline: none;
+    font-size: 14px;
+}
+
+.message-input button {
+    margin-left: 10px;
+    background-color: #007bff;
+    border: none;
+    padding: 12px;
+    color: white;
+    border-radius: 50%;
+    cursor: pointer;
+}
+
+.sidebar {
+    width: 74px; /* Largura da barra lateral */
+    background-color: #1b1e34; /* Cor de fundo azul escuro */
+    padding-top: 20px;
+    display: flex;
+    flex-direction: column; /* Disposição vertical dos botões */
+    justify-content: space-between; /* Distribui os botões proporcionalmente */
+    align-items: center;
+    height: 100vh; /* Ocupa toda a altura da tela */
+}
+
+.sidebar-button {   
+    /* width: 2.083vw; /* Largura do botão */
+    /* height: 4vh; /* Altura do botão */
+
+    min-width: 40px;
+    min-height: 40px;
+
+    background-color: #1b1e34; /* Cor de fundo do botão */
+    border: none; /* Remove bordas padrão */
+    border-radius: 7px; /* Cantos arredondados */
+    margin-bottom: 20px; /* Espaço entre os botões */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: background-color 0.3s ease, transform 0.3s ease; /* Animação de cor e movimento */
+    box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.1); /* Sombra suave */
+}
+
+.sidebar-button i {
+    font-size: 24px; /* Tamanho do ícone */
+    color: #1b1e34; /* Cor do ícone */
+}
+
+.sidebar-button:hover {
+    background-color: #1b1e34; /* Cor de fundo ao passar o mouse */
+    transform: translateY(-3px); /* Movimento suave ao passar o mouse */
+}
+
+.sidebar-button:active {
+    background-color: #1b1e34; /* Cor ao clicar */
+    transform: translateY(0); /* Volta à posição original ao clicar */
+}
+
+.bars {
+    margin-bottom: 100px;
+}
+
+.home {
+    margin-bottom: 550px;
+}
+
+.plus {
+    background-color: #ffffff; /* Fundo branco */
+    color: #1b1e34; /* Cor do ícone escura para contraste */
+}
+
+.plus i {
+    color: #1b1e34; /* Ícone com cor mais escura */
+}
+
+.plus:hover {
+    background-color: #f0f0f0;
+    box-shadow: 0 0 15px 3px rgba(255, 255, 255, 0.8);
+    transform: translateY(-1px);
+}
+
+.plus:active {
+    background-color: #cccccc;
+    transform: translateY(0);
+}
+
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Barra lateral -->
+        <div class="sidebar">
+            <button class="sidebar-button bars">
+                <i class="fas fa-bars"></i> <img src="menu-icon.svg">
+            </button>
+            <button class="sidebar-button plus">
+                <i class="fas fa-add-chat"></i> <img src="plus-icon.svg">
+            </button>
+            <button class="sidebar-button home">
+                <i class="fas fa-home"></i> <img src="home-icon.svg">
+            </button>
+            <button class="sidebar-button user">
+                <i class="fas fa-user"></i> <img src="perfil-icon.svg">
+            </button>
+            <button class="sidebar-button logout">
+                <i class="fas fa-sign-out-alt"></i> <img src="logout-icon.svg">
+            </button>
+        </div>
+        
+        
+        <!-- Área de chat -->
+        <main class="chat-area">
+            <header class="chat-header">
+                <p1>Chats</p1>
+                <div class="search-bar">
+                    <input type="text" placeholder="Procurar" />
+                    <button><i class="fas fa-filter"></i></button>
+                </div>
+            </header>
+            
+            <section class="chat-list">
+                <!-- Exemplo de item de chat -->
+                <div class="chat-item blue">
+                    <h2>Problema de Conexão a Internet</h2>
+                    <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nulla hendrerit vitae tortor eu scelerisque. Nam enim massa, eleifend vitae pellentesque vitae, aliquet in orci.</p>
+                    <span class="date">00d</span>
+                </div>
+                <div class="chat-item red">
+                    <h2>Título</h2>
+                    <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nulla hendrerit vitae tortor eu scelerisque. Nam enim massa, eleifend vitae pellentesque vitae, aliquet in orci.</p>
+                    <span class="date">00d</span>
+                </div>
+                <div class="chat-item orange">
+                    <h2>Título</h2>
+                    <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nulla hendrerit vitae tortor eu scelerisque. Nam enim massa, eleifend vitae pellentesque vitae, aliquet in orci.</p>
+                    <span class="date">00d</span>
+                </div>
+                <div class="chat-item green">
+                    <h2>Título</h2>
+                    <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nulla hendrerit vitae tortor eu scelerisque. Nam enim massa, eleifend vitae pellentesque vitae, aliquet in orci.</p>
+                    <span class="date">00d</span>
+                </div>
+                <div class="chat-item green">
+                    <h2>Título</h2>
+                    <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nulla hendrerit vitae tortor eu scelerisque. Nam enim massa, eleifend vitae pellentesque vitae, aliquet in orci.</p>
+                    <span class="date">00d</span>
+                </div>
+                <div class="chat-item green">
+                    <h2>Título</h2>
+                    <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nulla hendrerit vitae tortor eu scelerisque. Nam enim massa, eleifend vitae pellentesque vitae, aliquet in orci.</p>
+                    <span class="date">00d</span>
+                </div>
+                <div class="chat-item green">
+                    <h2>Título</h2>
+                    <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nulla hendrerit vitae tortor eu scelerisque. Nam enim massa, eleifend vitae pellentesque vitae, aliquet in orci.</p>
+                    <span class="date">00d</span>
+                </div>
+                <div class="chat-item green">
+                    <h2>Título</h2>
+                    <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nulla hendrerit vitae tortor eu scelerisque. Nam enim massa, eleifend vitae pellentesque vitae, aliquet in orci.</p>
+                    <span class="date">00d</span>
+                </div>
+                <div class="chat-item green">
+                    <h2>Título</h2>
+                    <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nulla hendrerit vitae tortor eu scelerisque. Nam enim massa, eleifend vitae pellentesque vitae, aliquet in orci.</p>
+                    <span class="date">00d</span>
+                </div>
+            </section>
+        </main>
+        
+        <!-- Área de mensagens -->
+        <div class="message-area">
+            <div class="message-container">
+                <div class="message incoming">Mensagem recebida...</div>
+                <div class="message outgoing">Sua mensagem...</div>
+            </div>
+            <div class="message-input">
+                <input type="text" placeholder="Enviar mensagem">
+                <button><i class="fas fa-paper-plane"></i></button>
+            </div>
+        </div>
+    </div>
+    <script src="script.js"></script>
+</body>
+<script>
+    document.querySelector('.message-input button').addEventListener('click', () => {
+    const messageText = document.querySelector('.message-input input').value;
+    if (messageText) {
+        const newMessage = document.createElement('div');
+        newMessage.classList.add('message', 'outgoing');
+        newMessage.innerText = messageText;
+        document.querySelector('.message-container').appendChild(newMessage);
+        document.querySelector('.message-input input').value = '';
+    }
+});
+
+</script>
+</html>
