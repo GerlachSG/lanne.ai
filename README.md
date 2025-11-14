@@ -1,4 +1,4 @@
-# Reposítorio Destinado ao projeto Lanne.Ai - TCC Senai 2024 - Redes de Computadores.
+# Reposítorio Destinado ao projeto Lanne.Ai - Projeto Integrador 2025
 
 Explore a ideia:
 - https://gerlachsg.github.io/lanne.ai/src/pages/index
