@@ -1,0 +1,10 @@
+# Schemas de Conversação já adicionados! ✅
+# Este arquivo é apenas um marcador de que os schemas foram adicionados ao models.py
+# Schemas incluídos:
+# - Message
+# - Conversation  
+# - ConversationCreate
+# - MessageCreate
+# - ConversationSummary
+# - ConversationContext
+# - ConversationListItem

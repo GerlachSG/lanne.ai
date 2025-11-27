@@ -1,0 +1,181 @@
+{
+  "eduardoaugusto": {
+    "username": "eduardoaugusto",
+    "user_id": "eduardoaugusto",
+    "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJlZHVhcmRvYXVndXN0byIsImFkbWluIjpmYWxzZSwiZXhwIjoxNzY2Nzk0MjY1LCJpYXQiOjE3NjQyMDIyNjV9.pYCYre-75yaSQVpOL_lz5r5hbPGJS9J7LOJzPHld2SU",
+    "admin": false,
+    "created_at": "2025-11-27T00:11:05.340229"
+  },
+  "dua": {
+    "username": "dua",
+    "user_id": "dua",
+    "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJkdWEiLCJhZG1pbiI6ZmFsc2UsImV4cCI6MTc2Njc5NTczMSwiaWF0IjoxNzY0MjAzNzMxfQ.7bg4pRmshZveq73XtbkBa3XGPRav4gYkfIhpSWphu8s",
+    "admin": false,
+    "created_at": "2025-11-27T00:35:31.252515"
+  },
+  "paulo": {
+    "username": "paulo",
+    "user_id": "paulo",
+    "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJwYXVsbyIsImFkbWluIjpmYWxzZSwiZXhwIjoxNzY2ODU0OTIyLCJpYXQiOjE3NjQyNjI5MjJ9.hef4t5XKAla_lsZlFF3WG6I6rY_rHbgjt6T9Bdr4phs",
+    "admin": false,
+    "created_at": "2025-11-27T13:20:02.539330",
+    "last_login": "2025-11-27T17:02:02.690877"
+  },
+  "edua": {
+    "username": "edua",
+    "user_id": "edua",
+    "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJlZHVhIiwiYWRtaW4iOmZhbHNlLCJleHAiOjE3NjY4NDI2MjUsImlhdCI6MTc2NDI1MDYyNX0.JKm33WACOrBbKX3e8RmvFNCFvlWwNoqDcW2-583ESGQ",
+    "admin": false,
+    "created_at": "2025-11-27T13:37:05.652982"
+  },
+  "edu": {
+    "username": "edu",
+    "user_id": "edu",
+    "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJlZHUiLCJhZG1pbiI6ZmFsc2UsImV4cCI6MTc2Njg2MTMyMiwiaWF0IjoxNzY0MjY5MzIyfQ.te1eKpIq8XBwRss3-bsg_3aEKLOgQN7M8S0Rsi_8yLk",
+    "admin": false,
+    "created_at": "2025-11-27T16:23:54.287800",
+    "last_login": "2025-11-27T18:48:42.689218"
+  },
+  "paulinho": {
+    "username": "paulinho",
+    "user_id": "paulinho",
+    "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJwYXVsaW5obyIsImFkbWluIjpmYWxzZSwiZXhwIjoxNzY2ODU1MDc0LCJpYXQiOjE3NjQyNjMwNzR9._VK0oNidRpiYhTEZJEyMyudJA2eJUniHSor37qjUoDs",
+    "admin": false,
+    "created_at": "2025-11-27T17:04:33.414119",
+    "last_login": "2025-11-27T17:04:34.782153"
+  },
+  "3232": {
+    "username": "3232",
+    "user_id": "3232",
+    "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIzMjMyIiwiYWRtaW4iOmZhbHNlLCJleHAiOjE3NjY4NTY4MDEsImlhdCI6MTc2NDI2NDgwMX0.uMVCxLm40-_eWyl9uxClNZl8IdTn6LjOJHCKerv8Cs0",
+    "admin": false,
+    "created_at": "2025-11-27T17:33:21.062837"
+  },
+  "12312312": {
+    "username": "12312312",
+    "user_id": "12312312",
+    "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjMxMjMxMiIsImFkbWluIjpmYWxzZSwiZXhwIjoxNzY2ODU3MjE0LCJpYXQiOjE3NjQyNjUyMTR9.1GnbI46gFvT7w_i4a4D9-Wi87KAOyHp81GW56TT8FwI",
+    "admin": false,
+    "created_at": "2025-11-27T17:40:12.958014",
+    "last_login": "2025-11-27T17:40:14.591802"
+  },
+  "3838": {
+    "username": "3838",
+    "user_id": "3838",
+    "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIzODM4IiwiYWRtaW4iOmZhbHNlLCJleHAiOjE3NjY4NTczNDQsImlhdCI6MTc2NDI2NTM0NH0.88Z9wVxLBS9YNQrbJSTWekne1-YayXmfFYUqewx4nis",
+    "admin": false,
+    "created_at": "2025-11-27T17:42:24.423479"
+  },
+  "3333333333": {
+    "username": "3333333333",
+    "user_id": "3333333333",
+    "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIzMzMzMzMzMzMzIiwiYWRtaW4iOmZhbHNlLCJleHAiOjE3NjY4NjIwMDYsImlhdCI6MTc2NDI3MDAwNn0.Xct_P4NUwEytG9QU7EbkQtavLJaQFKSrmJpdVk5JNjk",
+    "admin": false,
+    "created_at": "2025-11-27T19:00:06.480529"
+  },
+  "4389438294938": {
+    "username": "4389438294938",
+    "user_id": "4389438294938",
+    "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI0Mzg5NDM4Mjk0OTM4IiwiYWRtaW4iOmZhbHNlLCJleHAiOjE3NjY4NjIxNjYsImlhdCI6MTc2NDI3MDE2Nn0.tOPwWZrLbKhwC1nS9vnm6AF1s9Sa6SBWoJs1LA08WGo",
+    "admin": false,
+    "created_at": "2025-11-27T19:02:46.682965"
+  },
+  "000": {
+    "username": "000",
+    "user_id": "000",
+    "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIwMDAiLCJhZG1pbiI6ZmFsc2UsImV4cCI6MTc2Njg2Mjg4MiwiaWF0IjoxNzY0MjcwODgyfQ.VRqJsuku0sWS9sptF6uUNqw6OKbUBOGV7UFZJbVEc-s",
+    "admin": false,
+    "created_at": "2025-11-27T19:14:40.947744",
+    "last_login": "2025-11-27T19:14:42.362991"
+  },
+  "999": {
+    "username": "999",
+    "user_id": "999",
+    "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI5OTkiLCJhZG1pbiI6ZmFsc2UsImV4cCI6MTc2Njg2Mjk3NSwiaWF0IjoxNzY0MjcwOTc1fQ.hLyPr_1uNYBQQNV3CU8SzAL99ybQDqPPOcrhJBfalBo",
+    "admin": false,
+    "created_at": "2025-11-27T19:16:14.099018",
+    "last_login": "2025-11-27T19:16:15.466603"
+  },
+  "888": {
+    "username": "888",
+    "user_id": "888",
+    "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI4ODgiLCJhZG1pbiI6ZmFsc2UsImV4cCI6MTc2Njg2MzE4NywiaWF0IjoxNzY0MjcxMTg3fQ.dbguT9bCmPF4L4gefq3KiRMPXxr2b9Vdmh_gP9uGBBE",
+    "admin": false,
+    "created_at": "2025-11-27T19:19:47.031525"
+  },
+  "6565": {
+    "username": "6565",
+    "user_id": "6565",
+    "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI2NTY1IiwiYWRtaW4iOmZhbHNlLCJleHAiOjE3NjY4NjM3NDAsImlhdCI6MTc2NDI3MTc0MH0.Y5-uL-7pWfjmU9cSkMM_DAQ6MVuwYjTWx-zqXSSDj0k",
+    "admin": false,
+    "created_at": "2025-11-27T19:28:59.255199",
+    "last_login": "2025-11-27T19:29:00.602859"
+  },
+  "664": {
+    "username": "664",
+    "user_id": "664",
+    "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI2NjQiLCJhZG1pbiI6ZmFsc2UsImV4cCI6MTc2Njg2NDM2NiwiaWF0IjoxNzY0MjcyMzY2fQ.ZUPB5oaXOM29WZ8EqkPhYsNqDekMHRJ680-Yorw-F5U",
+    "admin": false,
+    "created_at": "2025-11-27T19:39:26.939585"
+  },
+  "233": {
+    "username": "233",
+    "user_id": "233",
+    "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIyMzMiLCJhZG1pbiI6ZmFsc2UsImV4cCI6MTc2Njg2NDY1OSwiaWF0IjoxNzY0MjcyNjU5fQ.hpSORiS_k-6sG4vy7-ADSRxy8xGCCX3zBwUJ8XDSsQQ",
+    "admin": false,
+    "created_at": "2025-11-27T19:44:17.696861",
+    "last_login": "2025-11-27T19:44:19.107253"
+  },
+  "111": {
+    "username": "111",
+    "user_id": "111",
+    "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMTEiLCJhZG1pbiI6ZmFsc2UsImV4cCI6MTc2Njg2NDcwMCwiaWF0IjoxNzY0MjcyNzAwfQ.jZv9YUNncOtOIXebA2SO0KTG3K39Mxg53nvpkOAwrV4",
+    "admin": false,
+    "created_at": "2025-11-27T19:45:00.625759"
+  },
+  "112": {
+    "username": "112",
+    "user_id": "112",
+    "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMTIiLCJhZG1pbiI6ZmFsc2UsImV4cCI6MTc2Njg2NTMxMCwiaWF0IjoxNzY0MjczMzEwfQ.LydZYtZmGm_hSNhIhb_G9l2Mtggofin6ulL4QQZBn3o",
+    "admin": false,
+    "created_at": "2025-11-27T19:55:08.978345",
+    "last_login": "2025-11-27T19:55:10.368519"
+  },
+  "9990": {
+    "username": "9990",
+    "user_id": "9990",
+    "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI5OTkwIiwiYWRtaW4iOmZhbHNlLCJleHAiOjE3NjY4NzM4OTYsImlhdCI6MTc2NDI4MTg5Nn0.AW6kliSt8gHt5HrulpLCyKzvxTD2630NoWVJc5zOokY",
+    "admin": false,
+    "created_at": "2025-11-27T22:18:14.683317",
+    "last_login": "2025-11-27T22:18:16.096360"
+  },
+  "435435": {
+    "username": "435435",
+    "user_id": "435435",
+    "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI0MzU0MzUiLCJhZG1pbiI6ZmFsc2UsImV4cCI6MTc2Njg3NDI0NywiaWF0IjoxNzY0MjgyMjQ3fQ.YW0U4hMzOyWbBmMT7bfrazLYmAMz6ln1EjBKK7HKjMg",
+    "admin": false,
+    "created_at": "2025-11-27T22:24:05.990941",
+    "last_login": "2025-11-27T22:24:07.238667"
+  },
+  "102": {
+    "username": "102",
+    "user_id": "102",
+    "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMDIiLCJhZG1pbiI6ZmFsc2UsImV4cCI6MTc2Njg3NTEzOSwiaWF0IjoxNzY0MjgzMTM5fQ.EFperaAOuY3CpMGri_j9ZyxDamaRyr4PbLA3-AdVAfM",
+    "admin": false,
+    "created_at": "2025-11-27T22:38:59.613672"
+  },
+  "bombastic": {
+    "username": "bombastic",
+    "user_id": "bombastic",
+    "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJib21iYXN0aWMiLCJhZG1pbiI6ZmFsc2UsImV4cCI6MTc2Njg3NTIyNSwiaWF0IjoxNzY0MjgzMjI1fQ.8HvWclHSocnEkp2v4jIQkmaHMnutbFpGIbDz7DmPXyg",
+    "admin": false,
+    "created_at": "2025-11-27T22:40:25.842257"
+  },
+  "bento": {
+    "username": "bento",
+    "user_id": "bento",
+    "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJiZW50byIsImFkbWluIjpmYWxzZSwiZXhwIjoxNzY2ODc1NzMzLCJpYXQiOjE3NjQyODM3MzN9.IbIBWzd6Eq3Nc87VGAgD889tJSP0akLFUj_kWkfDCes",
+    "admin": false,
+    "created_at": "2025-11-27T22:48:53.444315"
+  }
+}

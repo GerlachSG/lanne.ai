@@ -1,0 +1,391 @@
+{
+  "version": "1.2",
+  "language": "pt-BR",
+  "description": "Dataset ampliado (versão 1.2) de keywords e exemplos para classificação de intenção - Lanne (especialista em Debian/Linux). Mais exemplos técnicos, caminhos de logs e variações informais.",
+  "keywords": {
+    "TECHNICAL": {
+      "comandos": [
+        "como", "comando", "comandos", "executar", "rodar", "run", "usar", "utilizar",
+        "digitar", "qual", "quais", "onde", "listar", "mostrar", "exibir", "ver",
+        "comando pra", "cmd", "linha de comando", "terminal", "ps", "top", "htop", "kill", "killall",
+        "tail -f", "less", "more", "df -h", "du -sh", "lsblk", "blkid", "mount", "umount", "ls -la",
+        "mostre", "mostre os", "mostre me", "me mostre", "exiba", "visualizar",
+        "lanne pode executar", "lanne como faço", "lanne me ajuda", "lanne rodar comando",
+        "lanne qual comando", "lanne listar processos", "lanne configurar firewall",
+        "lanne rodar script", "lanne executar tarefa", "lanne iniciar serviço",
+        "lanne parar serviço", "lanne reiniciar sistema", "lanne verificar logs",
+        "lanne listar usuários", "lanne criar diretório", "lanne deletar arquivo",
+        "lanne mover pasta", "lanne copiar logs", "lanne verificar memória",
+        "lanne checar CPU", "lanne monitorar rede", "lanne configurar firewall",
+        "lanne ajustar permissões", "lanne instalar dependências"
+      ],
+      "operacoes": [
+        "criar", "deletar", "remover", "apagar", "mover", "copiar", "editar",
+        "modificar", "alterar", "mudar", "renomear", "adicionar", "inserir",
+        "atualizar pacote", "atualizar sistema", "upgrade sistema"
+      ],
+      "instalacao": [
+        "instalar", "install", "desinstalar", "uninstall", "configurar", "config",
+        "configuração", "setup", "compilar", "build", "atualizar", "update", "upgrade",
+        "apt", "apt-get", "dpkg", "snap", "flatpak", "ppa", "aptitude", "apt-mark", "apt-key",
+        "dpkg --configure -a", "apt-get -f install", "tasksel", "debootstrap",
+        "lanne instalar pacote", "lanne atualizar sistema", "lanne configurar apt",
+        "lanne corrigir dependências", "lanne instalar .deb",
+        "lanne corrigir pacotes", "lanne atualizar repositórios", "lanne instalar driver",
+        "lanne configurar ambiente", "lanne instalar Python", "lanne instalar Node.js",
+        "lanne configurar Docker", "lanne instalar Kubernetes", "lanne configurar cron job"
+      ],
+      "erros": [
+        "erro", "error", "bug", "falha", "problema", "issue", "não funciona",
+        "não inicia", "não abre", "travou", "travado", "parou", "crash", "crashou",
+        "deu pau", "quebrou", "corrompido", "danificado", "segfault", "panic",
+        "permission denied", "permission denied (permissão negada)", "connection refused", "no space left on device",
+        "out of memory", "broken pipe", "E: Sub-process returned an error", "unable to locate package",
+        "failed to start", "service failed", "dependency problems prevent configuration",
+        "lanne erro no sistema", "lanne falha ao iniciar", "lanne problema com serviço",
+        "lanne não funciona", "lanne travou", "lanne deu erro",
+        "lanne erro de conexão", "lanne falha ao instalar", "lanne problema de permissão",
+        "lanne erro de autenticação", "lanne falha ao carregar módulo", "lanne erro de dependência",
+        "lanne falha ao iniciar serviço", "lanne erro de configuração", "lanne erro de rede"
+      ],
+      "servicos": [
+        "apache", "nginx", "httpd", "mysql", "mariadb", "postgresql", "postgres",
+        "ssh", "sshd", "systemd", "systemctl", "docker", "podman", "ftp", "vsftpd",
+        "samba", "redis", "mongodb", "elasticsearch", "cron", "supervisor", "journald", "fail2ban",
+        "ufw", "nginx-ingress", "haproxy",
+        "lanne reiniciar serviço", "lanne status do serviço", "lanne configurar nginx",
+        "lanne configurar apache", "lanne configurar ssh",
+        "lanne configurar MySQL", "lanne configurar PostgreSQL", "lanne configurar Redis",
+        "lanne configurar MongoDB", "lanne configurar Elasticsearch", "lanne configurar Samba",
+        "lanne configurar FTP", "lanne configurar VPN", "lanne configurar proxy reverso",
+        "lanne configurar balanceador de carga", "lanne configurar servidor DNS"
+      ],
+      "linux": [
+        "linux", "debian", "ubuntu", "centos", "fedora", "arch", "mint",
+        "kernel", "bash", "shell", "terminal", "console", "cli", "gnu",
+        "unix", "distro", "distribuição", "debian stable", "buster", "bullseye", "bookworm",
+        "lanne", "Lanne", "lanne debian", "lanne linux", "lanne terminal", "lanne shell",
+        "lanne configurar kernel", "lanne ajustar fstab", "lanne configurar bootloader",
+        "lanne verificar logs do kernel", "lanne ajustar swap", "lanne configurar rede estática",
+        "lanne configurar hostname", "lanne ajustar timezone", "lanne sincronizar relógio"
+      ],
+      "permissoes": [
+        "permissão", "permissões", "permission", "permissions", "chmod", "chown",
+        "sudo", "root", "usuário", "user", "grupo", "group", "acesso", "access",
+        "owner", "dono", "proprietário", "sudoers", "visudo", "setfacl", "getfacl"
+      ],
+      "rede": [
+        "firewall", "ufw", "iptables", "nftables", "porta", "port", "ip", "rede", "network",
+        "conexão", "connection", "ssh", "tcp", "udp", "dns", "dhcp", "ping",
+        "traceroute", "netstat", "ss", "ifconfig", "ip addr", "interface", "route", "ip route", "resolv.conf"
+      ],
+      "sistema": [
+        "log", "logs", "serviço", "service", "processo", "process", "disco",
+        "disk", "partição", "partition", "mount", "montar", "memory", "memória",
+        "cpu", "processador", "ram", "swap", "boot", "grub", "fstab", "initramfs", "/var/log/syslog", "/var/log/auth.log", "/var/log/messages",
+        "mostre", "mostre os", "últimos", "ultimos", "recentes", "histórico", "historico"
+      ],
+      "troubleshooting": [
+        "debug", "debugar", "fix", "corrigir", "resolver", "solucionar", "solução",
+        "help", "ajuda", "socorro", "como resolver", "não consigo", "tentei",
+        "problema com", "dúvida", "duvida", "stack trace", "traceback"
+      ],
+      "arquivos": [
+        "arquivo", "file", "diretório", "directory", "pasta", "folder",
+        "buscar", "find", "grep", "search", "tar", "zip", "gzip", "compress",
+        "descompactar", "extrair", "extract", "rsync", "scp", "sftp", "mount.cifs", "cifs-utils",
+        "lanne buscar arquivo", "lanne copiar arquivo", "lanne mover arquivo",
+        "lanne listar diretórios", "lanne permissões de arquivo",
+        "lanne buscar logs", "lanne encontrar arquivos grandes", "lanne compactar diretório",
+        "lanne descompactar arquivo", "lanne mover logs", "lanne copiar backups",
+        "lanne listar permissões", "lanne verificar dono do arquivo", "lanne ajustar ACL"
+      ],
+      "pacotes": [
+        "apt", "apt-get", "dpkg", "yum", "dnf", "pacman", "snap", "flatpak",
+        "pacote", "package", "repositório", "repository", "repo", "ppa", "sources.list", "/etc/apt/sources.list.d"
+      ],
+      "debian_specific": [
+        "aptitude", "backports", "stable", "testing", "unstable", "hold", "pinning",
+        "/etc/apt/sources.list", "apt-key", "dpkg-reconfigure", "tasksel", "/etc/apt/apt.conf.d", "pinning apt",
+        "apt-key deprecated", "signed-by", "apt-secure"
+      ],
+      "commands_examples": [
+        "ps aux", "top", "htop", "journalctl -u <service>", "journalctl -xe", "systemctl status <service>",
+        "systemctl restart <service>", "systemctl enable <service>", "systemctl disable <service>", "apt update", "apt upgrade",
+        "apt install <package>", "dpkg -i <package.deb>", "dpkg --configure -a", "apt-get -f install"
+      , "df -h", "du -sh", "lsblk", "mount", "umount", "ls -la", "ss -tuln", "netstat -tulpn"
+      ],
+      "log_paths": [
+        "/var/log/syslog", "/var/log/messages", "/var/log/apache2/error.log", "/var/log/nginx/error.log",
+        "/var/log/mysql/error.log", "/var/log/auth.log", "/var/log/daemon.log"
+      , "/var/log/kern.log", "/var/log/apt/history.log"
+      ],
+      "error_messages": [
+        "permission denied", "permission denied (permissão negada)", "failed to start", "connection refused",
+        "no space left on device", "out of memory", "segfault", "broken pipe", "dependency problems prevent configuration",
+        "package has no installation candidate", "E: Could not get lock /var/lib/dpkg/lock", "E: Unable to fetch some archives",
+        "Hash Sum mismatch", "file has unexpected size", "connection timed out", "Temporary failure resolving"
+      ]
+    },
+    "GREETING": {
+      "saudacoes_informais": [
+        "oi", "olá", "ola", "hey", "ei", "e aí", "eai", "e ai", "salve",
+        "fala", "fala aí", "fala ai", "opa", "opaa", "eae", "coé", "coe",
+        "lanne oi", "lanne olá", "lanne tudo bem", "lanne como vai",
+        "lanne tudo certo?", "lanne como está?", "lanne beleza?", "lanne tranquilo?",
+        "lanne firmeza?", "lanne na paz?", "lanne de boa?"
+      ],
+      "saudacoes_formais": [
+        "bom dia", "boa tarde", "boa noite", "bom-dia", "boa-tarde", "boa-noite",
+        "lanne bom dia", "lanne boa tarde", "lanne boa noite",
+        "lanne bom trabalho", "lanne boa semana", "lanne boa sorte"
+      ],
+      "saudacoes_inglesas": [
+        "hi", "hello", "hey", "yo", "sup", "wassup", "what's up", "whats up"
+      ],
+      "cumprimentos": [
+        "tudo bem", "tudo bom", "como vai", "como está", "como esta",
+        "beleza", "tranquilo", "suave", "firmeza", "na paz", "de boa"
+      ],
+      "inicios_conversa": [
+        "oi tudo bem", "olá tudo bem", "oi como vai", "hey there",
+        "good morning", "good afternoon", "good evening"
+      ]
+    },
+    "CASUAL": {
+      "opinioes": [
+        "gosta", "prefere", "acha", "pensa", "opinião", "favorito", "favorita",
+        "melhor", "pior", "ama", "odeia", "curte", "detesta"
+      ],
+      "pessoal": [
+        "você", "seu", "sua", "sentimento", "sentimentos", "sonha", "sente",
+        "emoção", "nome", "idade", "mora", "vive", "trabalha"
+      ],
+      "conversacao": [
+        "conte", "fale", "explique", "descreva", "piada", "história", "historia",
+        "engraçado", "legal", "interessante", "curioso", "sabe",
+        "lanne conte algo", "lanne me diga", "lanne você sabe", "lanne me explica",
+        "lanne me conta uma curiosidade", "lanne você sabe uma dica?",
+        "lanne me explica algo interessante", "lanne você conhece Debian?",
+        "lanne qual sua opinião sobre Linux?", "lanne você gosta de open source?"
+      ],
+      "entretenimento": [
+        "filme", "música", "musica", "jogo", "game", "série", "serie",
+        "livro", "anime", "novela", "youtube", "netflix"
+      ],
+      "cotidiano": [
+        "tempo", "clima", "chuva", "sol", "café", "chá", "cha", "comida",
+        "almoço", "jantar", "pizza", "hamburguer", "cerveja"
+      ],
+      "filosofico": [
+        "sentido da vida", "existência", "deus", "religião", "religiao",
+        "universo", "amor", "felicidade", "morte", "vida"
+      ],
+      "pessoal": [
+        "você", "seu", "sua", "sentimento", "sentimentos", "sonha", "sente",
+        "emoção", "nome", "idade", "mora", "vive", "trabalha",
+        "lanne você gosta", "lanne você prefere", "lanne você acha",
+        "lanne você tem amigos?", "lanne você gosta de música?",
+        "lanne você prefere café ou chá?", "lanne você gosta de programar?",
+        "lanne você já usou Debian?", "lanne você conhece outras distribuições?"
+      ]
+    }
+  },
+  "training_samples": {
+    "TECHNICAL": [
+      "Como listar processos no Linux?",
+      "Preciso configurar o firewall UFW",
+      "Servidor Apache não inicia após reboot",
+      "Como instalar pacote .deb?",
+      "Uso de disco está alto no servidor",
+      "Criar novo usuário no sistema e dar sudo",
+      "MySQL não sobe, logs mostram erro",
+      "Onde ficam os logs do sistema (journald)?",
+      "Arquivo sem permissão de leitura, como corrigir?",
+      "Configuração SSH segura e desabilitar root login",
+      "Nginx dá erro 502 bad gateway ao proxy",
+      "Verificar porta 80 está aberta no iptables",
+      "Reiniciar serviço systemd que falhou",
+      "Fazer backup automático com rsync via cron",
+      "Kernel panic no boot, como recuperar?",
+      "Montar partição ext4 automaticamente no fstab",
+      "Configurar IP estático em Debian",
+      "Regras de iptables para bloquear porta",
+      "Upgrade Debian 11 (bullseye) para 12 (bookworm)",
+      "Debugar script bash com set -x",
+      "Find recursivo em diretório por extensão",
+      "Grep com expressão regular para logs",
+      "Compactar em tar.gz e extrair em destino",
+      "O que significa chmod 755?",
+      "Listar todos serviços ativos systemctl",
+      "Container Docker parado com exit code",
+      "SSH não conecta: timeout e autenticação",
+      "Disco cheio: como liberar espaço no Debian?",
+      "CPU em 100%: identificar processo e matar",
+      "Memória usada demais: identificar leak",
+      "Comando para ver uso de memória e swap",
+      "Desinstalar programa completamente com apt",
+      "Apache retornando 403 forbidden, verificar permissões",
+      "Como ver IP do servidor via CLI?",
+      "Qual comando mostra processos e uso CPU?",
+      "PostgreSQL não aceita conexão remota",
+      "Criar cron job para script de manutenção",
+      "Permissão negada ao executar script, como corrigir?",
+      "Script bash não executa: problemas de encoding/CRLF",
+      "Rede sem acesso à internet: checar gateway e DNS",
+      "Atualizar lista de pacotes apt e instalar dependências",
+      "Problema com /etc/hosts e resolução de nomes",
+      "Erro ao aplicar upgrade: dpkg com dependências quebradas",
+      "Gerar chave SSH e configurar authorized_keys",
+      "Habilitar e examinar logs do systemd/journald",
+      "Reparar filesystem com fsck em modo de recuperação",
+      "Configurar timezone e sincronização NTP/chrony",
+      "Remover pacotes órfãos e limpar cache apt",
+      "Resolver erro de permissões SELinux/AppArmor (quando aplicável)",
+      "Exportar e importar chaves GPG para repositórios",
+      "journalctl -u apache2 para ver logs de serviço",
+      "systemctl status nginx.service mostra failed",
+      "dpkg --configure -a após falha de instalação",
+      "apt-get -f install para resolver dependências",
+      "como usar ss ou netstat para portas abertas",
+      "verificar /var/log/syslog por mensagens de erro",
+      "como criar e habilitar um serviço systemd",
+      "configurar rede com /etc/network/interfaces ou netplan",
+      "corrigir erro E: Unable to locate package <pkg>",
+      "apt-key deprecated - como migrar para signed-by",
+      "Lanne, como listar processos no Linux?",
+      "Lanne, preciso configurar o firewall UFW",
+      "Lanne, servidor Apache não inicia após reboot",
+      "Lanne, como instalar pacote .deb?",
+      "Lanne, uso de disco está alto no servidor",
+      "Lanne, criar novo usuário no sistema e dar sudo",
+      "Lanne, onde ficam os logs do sistema?",
+      "Lanne, como corrigir permissão negada?",
+      "Lanne, configurar SSH seguro e desabilitar root login",
+      "Lanne, verificar porta 80 está aberta no iptables",
+      "Lanne, como configurar um servidor web?",
+      "Lanne, como ajustar permissões de arquivos?",
+      "Lanne, como instalar pacotes com apt?",
+      "Lanne, como verificar logs do sistema?",
+      "Lanne, como configurar um firewall?",
+      "Lanne, como criar um usuário com sudo?",
+      "Lanne, como monitorar uso de CPU?",
+      "Lanne, como liberar espaço em disco?",
+      "Lanne, como configurar um servidor DNS?",
+      "Lanne, como ajustar configurações do kernel?",
+      "Lanne, como configurar um proxy reverso?",
+      "Lanne, como instalar dependências do sistema?",
+      "Lanne, como corrigir erros de pacotes?",
+      "Lanne, como configurar um servidor de banco de dados?",
+      "Lanne, como ajustar configurações de rede?",
+      "Lanne, como configurar um balanceador de carga?",
+      "Lanne, como criar backups automáticos?",
+      "Lanne, como configurar um cron job?",
+      "Lanne, como verificar permissões de arquivos?",
+      "Lanne, como ajustar configurações do bootloader?"
+    ],
+    "GREETING": [
+      "Oi",
+      "Olá",
+      "Bom dia",
+      "Boa tarde",
+      "Boa noite",
+      "Hey",
+      "E aí",
+      "Tudo bem?",
+      "Como vai?",
+      "Beleza",
+      "Hi",
+      "Hello",
+      "Opa",
+      "Salve",
+      "Fala aí",
+      "Coé",
+      "E aí mano",
+      "Tudo tranquilo",
+      "Suave",
+      "Oi tudo bem?",
+      "Olá como vai?",
+      "Bom dia tudo bem?",
+      "Hey there",
+      "Good morning",
+      "What's up",
+      "Olá! Como posso ajudar com Debian?",
+      "Oi, preciso de ajuda no meu servidor Debian",
+      "Olá, sou a Lanne, especialista em Debian",
+      "Bom dia! Precisa de suporte em Debian?",
+      "Ei, quer ajuda com seu servidor?",
+      "Fala, em que posso ajudar?",
+      "Oi Lanne", "Olá Lanne", "Bom dia Lanne", "Boa tarde Lanne", "Boa noite Lanne",
+      "E aí Lanne", "Tudo bem Lanne?", "Como vai Lanne?",
+      "Oi Lanne, tudo certo?", "Olá Lanne, como está?",
+      "Bom dia Lanne, tudo bem?", "Boa tarde Lanne, como vai?",
+      "Boa noite Lanne, tranquilo?", "E aí Lanne, beleza?",
+      "Tudo bem Lanne?", "Como vai Lanne?", "Lanne, tudo tranquilo?"
+    ],
+    "CASUAL": [
+      "Você gosta de Linux?",
+      "Qual sua distribuição favorita?",
+      "O que você acha do Windows?",
+      "Conte uma piada",
+      "Você é uma inteligência artificial?",
+      "Quem te criou?",
+      "Como está o tempo hoje?",
+      "Qual é o sentido da vida?",
+      "Você tem sentimentos?",
+      "Prefere café ou chá?",
+      "O que acha de Python?",
+      "Você sonha?",
+      "Qual sua cor favorita?",
+      "Gosta de música?",
+      "Tem hobbies?",
+      "Namora alguém?",
+      "Quantos anos você tem?",
+      "Onde você mora?",
+      "Você come comida?",
+      "Dorme à noite?",
+      "Assiste Netflix?",
+      "Joga videogame?",
+      "Qual seu filme favorito?",
+      "Gosta de pizza?",
+      "Toma cerveja?",
+      "Me conta uma curiosidade sobre Linux",
+      "Qual comando é mais usado no dia a dia?",
+      "O que é sudo e por que usar?",
+      "Você recomenda Debian stable para servidores?",
+      "Qual a diferença entre apt e apt-get?",
+      "É melhor usar Docker ou Podman?",
+      "Como evitar arquivos temporários ocupando disco?",
+      "Tem dicas de segurança básicas para Debian?",
+      "Qual editor de texto você recomenda? (vim/nano)",
+      "Como aprender a usar o terminal?",
+      "Quais comandos devo aprender primeiro?",
+      "Você pode me indicar um tutorial de Debian?",
+      "Lanne, você gosta de Linux?", "Lanne, qual sua distribuição favorita?",
+      "Lanne, o que você acha do Windows?", "Lanne, conte uma piada",
+      "Lanne, você é uma inteligência artificial?", "Lanne, quem te criou?",
+      "Lanne, você gosta de Debian?", "Lanne, qual sua opinião sobre Linux?",
+      "Lanne, você prefere open source ou software proprietário?",
+      "Lanne, você já usou outras distribuições?",
+      "Lanne, você gosta de programar?", "Lanne, você conhece Python?",
+      "Lanne, você acha que Linux é melhor que Windows?",
+      "Lanne, você recomenda Debian para servidores?",
+      "Lanne, você gosta de trabalhar com servidores?"
+    ]
+  },
+  "rules": {
+    "GREETING": {
+      "priority": "high",
+      "max_words": 6,
+      "description": "Saudações curtas têm prioridade se query <= 6 palavras"
+    },
+    "TECHNICAL": {
+      "min_keywords": 2,
+      "description": "Mínimo 2 keywords técnicas para classificação, com foco em termos Debian-specific quando presentes"
+    },
+    "CASUAL": {
+      "default": true,
+      "description": "Classificação padrão quando não há matches fortes"
+    }
+  }
+}

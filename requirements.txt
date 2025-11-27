@@ -1,0 +1,42 @@
+# ==========================================
+# Lanne AI - Backend Requirements
+# ==========================================
+
+# ===== Core Framework =====
+fastapi
+uvicorn[standard]
+pydantic
+
+# ===== HTTP Client =====
+httpx
+
+# ===== LLM & Inference Service =====
+transformers
+torch --index-url https://download.pytorch.org/whl/cu121
+bitsandbytes
+accelerate
+sentencepiece
+
+# ===== RAG Service =====
+faiss-cpu
+numpy
+sentence-transformers
+
+# ===== Orchestrator (ML Classifier) =====
+scikit-learn
+joblib
+
+# ===== Auth & Conversation Services =====
+PyJWT
+SQLAlchemy
+aiosqlite
+
+# ===== Utilities =====
+python-multipart
+
+# ==========================================
+# Notes:
+# - TUI dependencies (textual, rich) are in linux/requirements.txt
+# - Development dependencies (pytest, jupyter) are in requirements-dev.txt
+# - All packages will install latest compatible versions
+# ==========================================
