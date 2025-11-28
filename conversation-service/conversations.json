@@ -1685,10 +1685,82 @@
           "role": "user",
           "content": "Quero ver meu ip",
           "timestamp": "2025-11-28T16:31:06.168353"
+        },
+        {
+          "id": "62b1319b",
+          "role": "user",
+          "content": "ver ip",
+          "timestamp": "2025-11-28T17:50:44.721044"
+        },
+        {
+          "id": "f058d7ec",
+          "role": "assistant",
+          "content": "Desculpe, tive um problema ao processar sua pergunta. Pode tentar novamente?",
+          "timestamp": "2025-11-28T17:50:55.981013"
+        },
+        {
+          "id": "4a215589",
+          "role": "user",
+          "content": "Como ver meu IP?",
+          "timestamp": "2025-11-28T17:51:13.971273"
+        },
+        {
+          "id": "424ee0fa",
+          "role": "assistant",
+          "content": "Desculpe, tive um problema ao processar sua pergunta. Pode tentar novamente?",
+          "timestamp": "2025-11-28T17:51:24.993065"
+        },
+        {
+          "id": "56a5d904",
+          "role": "user",
+          "content": "Como ver meu IP?",
+          "timestamp": "2025-11-28T17:57:55.339938"
+        },
+        {
+          "id": "3315b224",
+          "role": "assistant",
+          "content": "Para ver seu IP no Linux, use `ip addr` ou `hostname -I`. No Windows, use `ipconfig`.",
+          "timestamp": "2025-11-28T17:58:01.255176"
+        },
+        {
+          "id": "f86c64e2",
+          "role": "user",
+          "content": "Como alterar o banner motd?",
+          "timestamp": "2025-11-28T18:00:39.200745"
+        },
+        {
+          "id": "e580b3ad",
+          "role": "assistant",
+          "content": "Estou em modo leve sem modelo de IA carregado. Consigo responder perguntas tecnicas basicas. Tente ser especifico (ex: 'ver IP', 'uso de disco').",
+          "timestamp": "2025-11-28T18:02:40.310526"
+        },
+        {
+          "id": "8c629462",
+          "role": "user",
+          "content": "Uso de disco",
+          "timestamp": "2025-11-28T18:06:54.242669"
+        },
+        {
+          "id": "7dda064e",
+          "role": "assistant",
+          "content": "Cheque o uso de disco com `df -h` e espaco por pasta com `du -h -d1`.",
+          "timestamp": "2025-11-28T18:08:55.348765"
+        },
+        {
+          "id": "4d13f384",
+          "role": "user",
+          "content": "Uso de disco",
+          "timestamp": "2025-11-28T18:29:00.897580"
+        },
+        {
+          "id": "54c8de73",
+          "role": "assistant",
+          "content": "Desculpe, tive um problema ao processar sua pergunta. Pode tentar novamente?",
+          "timestamp": "2025-11-28T18:29:12.900366"
         }
       ],
       "created_at": "2025-11-28T16:30:13.465097",
-      "updated_at": "2025-11-28T16:31:06.168353"
+      "updated_at": "2025-11-28T18:29:12.900366"
     },
     "da24c17b-e41": {
       "id": "da24c17b-e41",
@@ -1723,6 +1795,28 @@
       ],
       "created_at": "2025-11-28T16:38:54.139367",
       "updated_at": "2025-11-28T16:41:10.522934"
+    },
+    "e495b724-8c3": {
+      "id": "e495b724-8c3",
+      "user_id": "edu",
+      "title": "OLá, o que você pode fazer?",
+      "description": "Conversa sobre Debian",
+      "messages": [
+        {
+          "id": "1742ce6e",
+          "role": "user",
+          "content": "OLá, o que você pode fazer?",
+          "timestamp": "2025-11-28T18:46:55.305399"
+        },
+        {
+          "id": "131b8687",
+          "role": "assistant",
+          "content": "Oi! Estou aqui para ajudar com Linux e Debian. O que voce precisa?",
+          "timestamp": "2025-11-28T18:46:56.852183"
+        }
+      ],
+      "created_at": "2025-11-28T18:46:55.253742",
+      "updated_at": "2025-11-28T18:46:56.852183"
     }
   }
 }

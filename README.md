@@ -22,47 +22,6 @@ python run.py
 - ✅ Abre navegador automaticamente
 
 **Requisito:** Python 3.8+
----
-
-## 🌐 Integração Web
-
-O frontend está em `website/` e integra com os microsserviços (gateway, auth, conversation etc.).
-
-- Uso local: `python run.py` serve o site em `http://localhost:3000/pages/index.html` e os serviços em `http://127.0.0.1:8000..8007`.
-- O site usa caminhos relativos para `pages/*.html` e `scripts/*`.
-
-### GitHub Pages
-- GitHub Pages é estático e roda em `https://<usuario>.github.io/...`.
-- Não acessa `localhost` (127.0.0.1) da sua máquina. Portanto, o site hospedado não consegue chamar seus backends locais.
-- Para funcionar online, hospede os serviços publicamente e ajuste os URLs do frontend para esse domínio.
-
-Passos:
-- Hospede `gateway`, `auth`, `conversation`, `orchestrator` etc. em um domínio público (Render, Railway, Fly.io, Azure, AWS EC2/VPS) com HTTPS.
-- Ajuste as URLs no frontend:
-   - `website/scripts/conversationService.js`
-      - `const CONVERSATION_API_URL = 'https://SEU_DOMINIO:PORTA_CONV'`
-      - `const GATEWAY_API_URL = 'https://SEU_DOMINIO:PORTA_GATEWAY'`
-   - `website/scripts/login.js`
-      - `API_BASE_URL = 'https://SEU_DOMINIO:PORTA_AUTH'`
-- Revise CORS nos serviços (em produção, especifique domínios permitidos).
-- Publique a pasta `website/` no GitHub Pages.
-
-### Modo Pesado (CUDA) x Modo Leve
-- Inference suporta GPU no Windows sem bitsandbytes (FP16) via env vars:
-   - `MODEL_NAME` (ex.: `Qwen/Qwen2.5-3B-Instruct` ou `Qwen/Qwen2.5-7B-Instruct`)
-   - `HEAVY_NO_BNB=1` (usa FP16 em CUDA)
-   - `FORCE_CPU=0` (GPU quando disponível)
-- O frontend exibe um badge “Modo leve” quando a resposta vem via fallback (sem pipeline completo). Em modo pesado o badge não aparece.
-
-### RAG (FAISS)
-- Para habilitar busca vetorial local:
-```powershell
-pip install sentence-transformers faiss-cpu numpy
-cd rag-service
-python populate_faiss.py
-```
-Reinicie os serviços depois.
-
 
 ---
 

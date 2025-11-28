@@ -61,8 +61,20 @@ const generateBotResponse = async (incomingMessageDiv, userMessage) => {
             const badge = document.createElement('div');
             badge.textContent = 'Modo leve';
             badge.title = 'Resposta gerada sem o pipeline completo (orchestrator/RAG)';
-            badge.style.cssText = 'display:inline-block;margin:0 0 6px 0;padding:2px 8px;border-radius:10px;background:#FFD54F;color:#222;font-size:11px;font-weight:700;align-self:flex-start;';
-            incomingMessageDiv.insertBefore(badge, messageElement);
+            badge.style.cssText = [
+                'display:block',
+                'width:max-content',
+                'margin:0 0 6px 0',
+                'padding:2px 8px',
+                'border-radius:10px',
+                'background:#FFD54F',
+                'color:#222',
+                'font-size:11px',
+                'font-weight:700',
+                'text-align:left'
+            ].join(';');
+            // Inserir o badge no topo da mensagem do bot (acima do texto), alinhado à esquerda
+            incomingMessageDiv.insertBefore(badge, incomingMessageDiv.firstChild);
         }
 
         // Atualizar lista de conversas

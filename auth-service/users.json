@@ -31,18 +31,18 @@
   "edu": {
     "username": "edu",
     "user_id": "edu",
-    "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJlZHUiLCJhZG1pbiI6ZmFsc2UsImV4cCI6MTc2Njg2MTMyMiwiaWF0IjoxNzY0MjY5MzIyfQ.te1eKpIq8XBwRss3-bsg_3aEKLOgQN7M8S0Rsi_8yLk",
+    "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJlZHUiLCJhZG1pbiI6ZmFsc2UsImV4cCI6MTc2Njk0NzU5NywiaWF0IjoxNzY0MzU1NTk3fQ.EM4Q5FnJB1eNf5GIaNRdbPv0hqBEQifK4uHvqAAz2Iw",
     "admin": false,
     "created_at": "2025-11-27T16:23:54.287800",
-    "last_login": "2025-11-27T18:48:42.689218"
+    "last_login": "2025-11-28T18:46:37.396117"
   },
   "paulinho": {
     "username": "paulinho",
     "user_id": "paulinho",
-    "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJwYXVsaW5obyIsImFkbWluIjpmYWxzZSwiZXhwIjoxNzY2OTM5NDAyLCJpYXQiOjE3NjQzNDc0MDJ9.8Ny6hl-HzjurSURwiB2c3h44DolVOI0ren-89Wk6VI4",
+    "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJwYXVsaW5obyIsImFkbWluIjpmYWxzZSwiZXhwIjoxNzY2OTQ2NTI5LCJpYXQiOjE3NjQzNTQ1Mjl9.tbyzbmBQS3LB5gv2NlCUtLGyvvhZJO2SBbjekWVs2aY",
     "admin": false,
     "created_at": "2025-11-27T17:04:33.414119",
-    "last_login": "2025-11-28T16:30:02.771108"
+    "last_login": "2025-11-28T18:28:49.020196"
   },
   "3232": {
     "username": "3232",
@@ -174,9 +174,9 @@
   "bento": {
     "username": "bento",
     "user_id": "bento",
-    "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJiZW50byIsImFkbWluIjpmYWxzZSwiZXhwIjoxNzY2OTM5OTIxLCJpYXQiOjE3NjQzNDc5MjF9.nCzmor_M0oZTUL7xXdVASmMgOgPi2fS09qsckaOzOM0",
+    "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJiZW50byIsImFkbWluIjpmYWxzZSwiZXhwIjoxNzY2OTQ1NzkwLCJpYXQiOjE3NjQzNTM3OTB9.FnUeLJBn6DN2qMEvdih4b5GDlX38Pnityk36_CtOQqw",
     "admin": false,
     "created_at": "2025-11-27T22:48:53.444315",
-    "last_login": "2025-11-28T16:38:41.330932"
+    "last_login": "2025-11-28T18:16:30.563813"
   }
 }

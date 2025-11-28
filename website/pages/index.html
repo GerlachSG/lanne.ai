@@ -282,14 +282,10 @@
             background-color: #273c66;
         }
 
-        .login-button.google {
-            background-color: #ffffff; /* Cor do Google */
-            color: #000000;
-            transition: background-color 0.3s ease;
-        }
-
-        .login-button.google:hover {
-            background-color: #c2c2c2;
+        /* Botão genérico de login (sem ícone Google) */
+        .login-button {
+            background-color: #1F203F;
+            color: #FFFFFF;
         }
 
         span{
@@ -352,26 +348,7 @@
         });
     </script>
 
-    <script>
-        // PARTE 2 DO CARD
-        document.querySelector('.card-button').addEventListener('click', function() {
-            const card = document.querySelector('.card');
-            card.innerHTML = `
-                <h5>Bem Vindo!</h5>
-                <img src="../imagens/seta_vetor.svg" alt="Icone" id="backButton" class="card-icon">
-                <div class="button-wrapper2">
-                    <button class="login-button facebook">
-                        <img src="../imagens/facebook-icon.svg" alt="Facebook" class="icon">
-                        Faça login com<span class="bold-text">Facebook</span>
-                    </button>
-                    <button class="login-button google">
-                        <img src="../imagens/google-icon.svg" alt="Google" class="icon">
-                        Faça login com<span class="bold-text">Google</span>
-                    </button>
-                </div>
-            `;
-        });
-    </script>
+    <!-- Card é controlado por logineanimacao.js; removido conteúdo antigo de Facebook/Google -->
 <script>
 
     // ANIMAÇÃO DE SAIR O CARD
