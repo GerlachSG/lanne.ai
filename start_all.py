@@ -33,54 +33,63 @@ COLORS = {
 }
 
 # Configuração dos serviços
+# Serviços marcados como optional=True não param o sistema se falharem
 SERVICES = [
     {
         "name": "Gateway",
         "dir": "gateway-service",
         "port": 8000,
-        "color": "CYAN"
+        "color": "CYAN",
+        "optional": False
     },
     {
         "name": "Orchestrator",
         "dir": "orchestrator-service",
         "port": 8001,
-        "color": "MAGENTA"
+        "color": "MAGENTA",
+        "optional": False
     },
     {
         "name": "Inference",
         "dir": "inference-service",
         "port": 8002,
-        "color": "BLUE"
+        "color": "BLUE",
+        "optional": True  # Opcional - requer GPU/muita RAM
     },
     {
         "name": "RAG",
         "dir": "rag-service",
         "port": 8003,
-        "color": "YELLOW"
+        "color": "YELLOW",
+        "optional": True  # Opcional - requer download de modelo
     },
     {
         "name": "Web Search",
         "dir": "web-search-service",
         "port": 8004,
-        "color": "GREEN"
+        "color": "GREEN",
+        "optional": True  # Opcional - pode falhar sem internet
     },
     {
         "name": "Metrics",
         "dir": "metrics-service",
         "port": 8005,
-        "color": "CYAN"
+        "color": "CYAN",
+        "optional": True
     },
     {
         "name": "Conversation",
         "dir": "conversation-service",
         "port": 8006,
-        "color": "MAGENTA"
+        "color": "MAGENTA",
+        "optional": False  # Essencial para histórico
     },
     {
         "name": "Auth",
         "dir": "auth-service",
         "port": 8007,
-        "color": "GREEN"
+        "color": "GREEN",
+        "optional": False  # Essencial para login
     }
 ]
 
@@ -201,10 +210,15 @@ def main():
             running_processes.append(process)
             time.sleep(3)
         else:
-            print_colored(f"\nFailed to start {service['name']}", "RED", bold=True)
-            print_colored("Stopping all services...", "YELLOW")
-            stop_all_services()
-            sys.exit(1)
+            is_optional = service.get("optional", False)
+            if is_optional:
+                print_colored(f"⚠ {service['name']} failed (optional, continuing...)", "YELLOW")
+                running_processes.append(None)  # Placeholder
+            else:
+                print_colored(f"\nFailed to start {service['name']} (required)", "RED", bold=True)
+                print_colored("Stopping all services...", "YELLOW")
+                stop_all_services()
+                sys.exit(1)
     
     print_colored("\nWaiting for services to initialize...", "YELLOW")
     for i in range(15):
@@ -213,23 +227,31 @@ def main():
     print()
     
     all_started = True
+    required_ok = True
     print_colored("\nService Status:", "CYAN", bold=True)
     for service, process in zip(SERVICES, running_processes):
-        if process.poll() is None:
+        is_optional = service.get("optional", False)
+        if process and process.poll() is None:
             print_colored(
-                f"{service['name']:15} - Running on port {service['port']}",
+                f"✓ {service['name']:15} - Running on port {service['port']}",
                 "GREEN"
             )
         else:
+            status_text = "(optional)" if is_optional else "(REQUIRED)"
             print_colored(
-                f"{service['name']:15} - Failed to start",
-                "RED"
+                f"✗ {service['name']:15} - Failed {status_text}",
+                "YELLOW" if is_optional else "RED"
             )
             all_started = False
+            if not is_optional:
+                required_ok = False
     
-    if all_started:
+    if required_ok:
         print("\n" + "=" * 60)
-        print_colored("All services started successfully!", "GREEN", bold=True)
+        if all_started:
+            print_colored("All services started successfully!", "GREEN", bold=True)
+        else:
+            print_colored("Essential services started! (some optional failed)", "YELLOW", bold=True)
         print_colored("Press Ctrl+C to stop all services", "YELLOW")
         print("=" * 60 + "\n")
         
@@ -239,7 +261,7 @@ def main():
         except KeyboardInterrupt:
             stop_all_services()
     else:
-        print_colored("\nSome services failed to start!", "RED", bold=True)
+        print_colored("\nRequired services failed to start!", "RED", bold=True)
         stop_all_services()
         sys.exit(1)
 

@@ -39,10 +39,10 @@
   "paulinho": {
     "username": "paulinho",
     "user_id": "paulinho",
-    "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJwYXVsaW5obyIsImFkbWluIjpmYWxzZSwiZXhwIjoxNzY2ODU1MDc0LCJpYXQiOjE3NjQyNjMwNzR9._VK0oNidRpiYhTEZJEyMyudJA2eJUniHSor37qjUoDs",
+    "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJwYXVsaW5obyIsImFkbWluIjpmYWxzZSwiZXhwIjoxNzY2OTM5NDAyLCJpYXQiOjE3NjQzNDc0MDJ9.8Ny6hl-HzjurSURwiB2c3h44DolVOI0ren-89Wk6VI4",
     "admin": false,
     "created_at": "2025-11-27T17:04:33.414119",
-    "last_login": "2025-11-27T17:04:34.782153"
+    "last_login": "2025-11-28T16:30:02.771108"
   },
   "3232": {
     "username": "3232",
@@ -174,8 +174,9 @@
   "bento": {
     "username": "bento",
     "user_id": "bento",
-    "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJiZW50byIsImFkbWluIjpmYWxzZSwiZXhwIjoxNzY2ODc1NzMzLCJpYXQiOjE3NjQyODM3MzN9.IbIBWzd6Eq3Nc87VGAgD889tJSP0akLFUj_kWkfDCes",
+    "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJiZW50byIsImFkbWluIjpmYWxzZSwiZXhwIjoxNzY2OTM5OTIxLCJpYXQiOjE3NjQzNDc5MjF9.nCzmor_M0oZTUL7xXdVASmMgOgPi2fS09qsckaOzOM0",
     "admin": false,
-    "created_at": "2025-11-27T22:48:53.444315"
+    "created_at": "2025-11-27T22:48:53.444315",
+    "last_login": "2025-11-28T16:38:41.330932"
   }
 }

@@ -8,6 +8,23 @@
 
 ---
 
+## 🚀 Início Rápido (1 Comando!)
+
+```bash
+python run.py
+```
+
+**Isso faz TUDO automaticamente:**
+- ✅ Verifica Python e pip
+- ✅ Instala dependências (se necessário)
+- ✅ Inicia todos os serviços backend
+- ✅ Inicia interface web
+- ✅ Abre navegador automaticamente
+
+**Requisito:** Python 3.8+
+
+---
+
 ## 📋 Visão Geral
 
 **Lanne AI** é um assistente de IA especializado em sistemas Linux/Debian que combina:

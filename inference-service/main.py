@@ -25,6 +25,7 @@ from typing import Optional
 import logging
 import time
 import re
+import os
 
 from lanne_schemas import LLMRequest, LLMResponse
 
@@ -46,17 +47,23 @@ app = FastAPI(
 # CONFIGURACAO DO MODELO
 # =============================================================================
 
-# Modelo principal - Qwen2.5 e muito mais estavel que Mistral
-MODEL_NAME = "Qwen/Qwen2.5-7B-Instruct"
+# Modelo principal (pode ser sobrescrito por env var MODEL_NAME)
+MODEL_NAME = os.getenv("MODEL_NAME", "Qwen/Qwen2.5-7B-Instruct")
 
 # Alternativas caso queira testar outros:
 # MODEL_NAME = "meta-llama/Llama-3.1-8B-Instruct"  # Tambem muito bom
 # MODEL_NAME = "microsoft/Phi-3-medium-4k-instruct"  # Menor, mais rapido
 
-FALLBACK_MODEL = "Qwen/Qwen2.5-1.5B-Instruct"  # Fallback menor
+# Fallback leve para CPU (pode ser sobrescrito por env var FALLBACK_MODEL)
+FALLBACK_MODEL = os.getenv("FALLBACK_MODEL", "TinyLlama/TinyLlama-1.1B-Chat-v1.0")
 
-# Usar 8-bit ao inves de 4-bit (melhor qualidade, ainda cabe em 12GB)
-USE_8BIT = True
+# Flags de configuracao via env vars
+# USE_8BIT: "1" para quantizacao 8-bit quando CUDA estiver disponivel
+# FORCE_CPU: "1" para forcar CPU mesmo com CUDA disponivel
+# HEAVY_NO_BNB: "1" para carregar FP16 em CUDA sem bitsandbytes (Windows)
+USE_8BIT = os.getenv("USE_8BIT", "1") == "1"
+FORCE_CPU = os.getenv("FORCE_CPU", "0") == "1"
+HEAVY_NO_BNB = os.getenv("HEAVY_NO_BNB", "0") == "1"
 
 
 class LLMService:
@@ -79,61 +86,81 @@ class LLMService:
             logger.info(f"Carregando modelo: {MODEL_NAME}")
             
             # Detectar dispositivo disponivel
-            if torch.cuda.is_available():
+            if torch.cuda.is_available() and not FORCE_CPU:
                 self.device = "cuda"
                 vram_gb = torch.cuda.get_device_properties(0).total_memory / 1e9
                 logger.info(f"CUDA disponivel. GPU: {torch.cuda.get_device_name(0)}")
                 logger.info(f"VRAM disponivel: {vram_gb:.2f} GB")
                 
-                # Escolher quantizacao baseado na VRAM
-                if USE_8BIT and vram_gb >= 10:
-                    # 8-bit - melhor qualidade
-                    logger.info("Usando quantizacao 8-bit (melhor qualidade)")
-                    bnb_config = BitsAndBytesConfig(
-                        load_in_8bit=True,
-                        llm_int8_threshold=6.0,
+                if HEAVY_NO_BNB:
+                    # Carregar FP16 sem bitsandbytes (mais compatível no Windows)
+                    logger.info("HEAVY_NO_BNB=1 -> carregando FP16 sem bitsandbytes")
+                    self.model = AutoModelForCausalLM.from_pretrained(
+                        MODEL_NAME,
+                        device_map="auto",
+                        trust_remote_code=True,
+                        torch_dtype=torch.float16,
                     )
+                    self.model_name = MODEL_NAME
                 else:
-                    # 4-bit - economia de VRAM
-                    logger.info("Usando quantizacao 4-bit NF4")
-                    bnb_config = BitsAndBytesConfig(
-                        load_in_4bit=True,
-                        bnb_4bit_quant_type="nf4",
-                        bnb_4bit_compute_dtype=torch.bfloat16,
-                        bnb_4bit_use_double_quant=True
+                    # Escolher quantizacao baseado na VRAM
+                    if USE_8BIT and vram_gb >= 10:
+                        # 8-bit - melhor qualidade
+                        logger.info("Usando quantizacao 8-bit (melhor qualidade)")
+                        bnb_config = BitsAndBytesConfig(
+                            load_in_8bit=True,
+                            llm_int8_threshold=6.0,
+                        )
+                    else:
+                        # 4-bit - economia de VRAM
+                        logger.info("Usando quantizacao 4-bit NF4")
+                        bnb_config = BitsAndBytesConfig(
+                            load_in_4bit=True,
+                            bnb_4bit_quant_type="nf4",
+                            bnb_4bit_compute_dtype=torch.bfloat16,
+                            bnb_4bit_use_double_quant=True
+                        )
+                    # Carregar modelo com quantizacao
+                    self.model = AutoModelForCausalLM.from_pretrained(
+                        MODEL_NAME,
+                        quantization_config=bnb_config,
+                        device_map="auto",
+                        trust_remote_code=True,
+                        torch_dtype=torch.bfloat16,
                     )
-                
-                # Carregar modelo com quantizacao
-                self.model = AutoModelForCausalLM.from_pretrained(
-                    MODEL_NAME,
-                    quantization_config=bnb_config,
-                    device_map="auto",
-                    trust_remote_code=True,
-                    torch_dtype=torch.bfloat16,
-                )
-                self.model_name = MODEL_NAME
+                    self.model_name = MODEL_NAME
                 
             else:
                 logger.warning("CUDA nao disponivel. Usando CPU com modelo menor")
                 self.device = "cpu"
                 
                 # Fallback para modelo menor em CPU
-                self.model = AutoModelForCausalLM.from_pretrained(
-                    FALLBACK_MODEL,
-                    device_map="auto",
-                    trust_remote_code=True,
-                    torch_dtype=torch.float32,
-                )
-                self.model_name = FALLBACK_MODEL
+                try:
+                    self.model = AutoModelForCausalLM.from_pretrained(
+                        FALLBACK_MODEL,
+                        device_map="auto",
+                        trust_remote_code=True,
+                        torch_dtype=torch.float32,
+                    )
+                    self.model_name = FALLBACK_MODEL
+                except Exception as e:
+                    # Se ate o fallback falhar, manter servico em modo leve
+                    logger.warning(f"Falha ao carregar modelo fallback ({FALLBACK_MODEL}): {e}")
+                    self.model = None
+                    self.tokenizer = None
+                    self.model_name = "light-fallback"
+                    logger.warning("Ativando modo leve (respostas basicas)")
+                    return
             
             # Carregar tokenizer
-            self.tokenizer = AutoTokenizer.from_pretrained(
-                self.model_name,
-                trust_remote_code=True
-            )
+            if self.model is not None:
+                self.tokenizer = AutoTokenizer.from_pretrained(
+                    self.model_name,
+                    trust_remote_code=True
+                )
             
             # Configurar pad_token se nao existir
-            if self.tokenizer.pad_token is None:
+            if self.tokenizer is not None and self.tokenizer.pad_token is None:
                 self.tokenizer.pad_token = self.tokenizer.eos_token
             
             logger.info(f"Modelo carregado: {self.model_name} em {self.device}")
@@ -145,7 +172,39 @@ class LLMService:
             
         except Exception as e:
             logger.error(f"Erro ao carregar modelo: {e}")
-            raise
+            # Nao derrubar o servico: manter em modo leve
+            self.model = None
+            self.tokenizer = None
+            self.device = "cpu"
+            self.model_name = "light-fallback"
+            logger.warning("Servico em modo leve (sem LLM carregado)")
+
+    def _fallback_generate(self, prompt: str) -> str:
+        """
+        Gera resposta simples em modo leve (sem LLM), com regras para
+        comandos Linux comuns. Mantem portugues e sem emojis.
+        """
+        q = (prompt or "").lower()
+        tips = {
+            "ip": "Para ver seu IP no Linux, use `ip addr` ou `hostname -I`. No Windows, use `ipconfig`.",
+            "memoria": "Verifique a memoria com `free -h` e `vmstat -s`. Para detalhes, `cat /proc/meminfo`.",
+            "memória": "Verifique a memoria com `free -h` e `vmstat -s`. Para detalhes, `cat /proc/meminfo`.",
+            "disco": "Cheque o uso de disco com `df -h` e espaco por pasta com `du -h -d1`.",
+            "cpu": "Veja o uso de CPU com `top` ou `htop`. Para load average, `uptime`.",
+            "processo": "Liste processos com `ps aux --sort=-%cpu | head -n 20`.",
+            "processos": "Liste processos com `ps aux --sort=-%cpu | head -n 20`.",
+            "porta": "Conexoes e portas: `ss -tulpn` ou `netstat -tulpn`.",
+            "rede": "Informacoes de rede: `ip a`, `ip r` e `nmcli dev status`.",
+            "uptime": "Tempo ligado: `uptime -p` e detalhes em `who -b`.",
+            "log": "Logs do sistema: `journalctl -p err -n 100` e `dmesg -T`.",
+        }
+        for k, v in tips.items():
+            if k in q:
+                return v
+        return (
+            "Estou em modo leve sem modelo de IA carregado. "
+            "Consigo responder perguntas tecnicas basicas. Tente ser especifico (ex: 'ver IP', 'uso de disco')."
+        )
     
     def _clean_response(self, text: str) -> str:
         """
@@ -206,7 +265,13 @@ class LLMService:
         Gera texto usando o LLM com controle de repeticao
         """
         if self.model is None or self.tokenizer is None:
-            raise RuntimeError("Modelo nao carregado")
+            # Modo leve: gerar resposta basica
+            text = self._fallback_generate(prompt)
+            return LLMResponse(
+                generated_text=text,
+                tokens_generated=len(text.split()),
+                inference_time_ms=1.0,
+            )
         
         try:
             start_time = time.time()
@@ -279,8 +344,8 @@ async def startup_event():
         llm_service.load_model()
         logger.info("Inference Service pronto")
     except Exception as e:
-        logger.error(f"Falha ao iniciar servico: {e}")
-        raise
+        # Nao derrubar: ja estaremos em modo leve
+        logger.error(f"Falha ao iniciar servico (modo leve ativo): {e}")
 
 
 @app.get("/")

@@ -16,7 +16,10 @@ from pathlib import Path
 from typing import List, Dict, Any, Optional
 import logging
 import hashlib
-from sentence_transformers import SentenceTransformer
+try:
+    from sentence_transformers import SentenceTransformer
+except Exception as _e:
+    SentenceTransformer = None  # fallback: permitir iniciar sem embeddings
 
 from lanne_schemas import (
     RAGSearchRequest,
@@ -64,10 +67,19 @@ class RAGService:
             # Criar diretório se não existir
             DATA_DIR.mkdir(parents=True, exist_ok=True)
             
-            # Carregar modelo de embeddings
-            logger.info("Loading embedding model (sentence-transformers)...")
-            self.embedding_model = SentenceTransformer('all-MiniLM-L6-v2')
-            logger.info("Embedding model loaded")
+            # Carregar modelo de embeddings (tolerante a falhas)
+            if SentenceTransformer is not None:
+                try:
+                    logger.info("Loading embedding model (sentence-transformers)...")
+                    self.embedding_model = SentenceTransformer('all-MiniLM-L6-v2')
+                    logger.info("Embedding model loaded")
+                except Exception as e:
+                    logger.warning(f"Could not load embedding model: {e}")
+                    self.embedding_model = None
+                    logger.warning("RAG will run with empty results until embeddings are available")
+            else:
+                logger.warning("sentence-transformers not installed; RAG will run without embeddings")
+                self.embedding_model = None
             
             if FAISS_INDEX_PATH.exists() and METADATA_PATH.exists():
                 # Carregar índice existente
@@ -88,7 +100,9 @@ class RAGService:
                 
         except Exception as e:
             logger.error(f"Error loading/creating index: {e}")
-            raise
+            # Nao derrubar o servico; manter indice vazio
+            self.index = faiss.IndexFlatL2(self.dimension)
+            self.metadata = []
     
     def save_index(self):
         """
@@ -111,7 +125,8 @@ class RAGService:
         Gera embedding para um texto usando sentence-transformers
         """
         if self.embedding_model is None:
-            raise RuntimeError("Embedding model not loaded")
+            # Sem embeddings: retornar vetor zero para manter compatibilidade
+            return np.zeros((self.dimension,), dtype='float32')
         
         # Gerar embedding
         embedding = self.embedding_model.encode(text, convert_to_numpy=True)
@@ -126,7 +141,7 @@ class RAGService:
         """
         Busca por similaridade no índice FAISS
         """
-        if self.index is None or self.index.ntotal == 0:
+        if self.embedding_model is None or self.index is None or self.index.ntotal == 0:
             logger.warning("Index is empty")
             return RAGSearchResponse(
                 documents=[],

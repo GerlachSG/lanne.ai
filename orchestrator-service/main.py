@@ -1,28 +1,28 @@
 ﻿"""
 Orchestrator Service - Cerebro do sistema Lanne AI
 Porta: 8001
-Responsabilidades:
-- Classificacao de intencao (TECHNICAL, CASUAL, GREETING)
-- Gerenciamento do fluxo de RAG hibrido
-- Orquestracao de chamadas aos servicos inference, rag e web-search
 
-MUDANCAS v2:
-- Removidos TODOS os emojis
-- Prompts otimizados para Qwen2.5 (formato ChatML)
-- Pos-processamento de resposta melhorado
-- Parametros de geracao mais restritivos
+VERSAO 4.0 - ARQUITETURA ReAct (Reason + Act)
+=============================================
+O LLM raciocina e decide dinamicamente o que fazer:
+1. Planner: Analisa query e cria plano de execucao
+2. Executor: Executa apenas o que o plano pede
+3. Avaliador: Verifica se precisa de mais dados
+4. Gerador: Cria resposta final com contexto coletado
 
-MUDANCAS v3:
-- collect_agent_logs agora usa LLM para decidir comandos
-- Suporta ate 3 comandos por query
-- Sem fallbacks - LLM decide tudo
+BENEFICIOS:
+- Sem desperdicio de recursos (RAG/WEB so quando necessario)
+- Decisoes inteligentes baseadas em raciocinio
+- Flexivel e extensivel
+- Facil de debugar (plano explicito)
 """
 
 from fastapi import FastAPI, HTTPException, status
 from fastapi.responses import StreamingResponse
 from fastapi.middleware.cors import CORSMiddleware
 import httpx
-from typing import Optional, AsyncGenerator
+from typing import Optional, AsyncGenerator, List, Dict, Any
+from dataclasses import dataclass, field
 import logging
 import joblib
 from pathlib import Path
@@ -50,11 +50,11 @@ logger = logging.getLogger(__name__)
 # Inicializar FastAPI
 app = FastAPI(
     title="Lanne AI Orchestrator Service",
-    description="Servico de orquestracao e roteamento de intencao",
-    version="3.0.0"
+    description="Servico de orquestracao com arquitetura ReAct",
+    version="4.0.0"
 )
 
-# Configurar CORS para permitir streaming do navegador
+# Configurar CORS
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -63,7 +63,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Configurar encoding UTF-8 para respostas
+# Configurar encoding UTF-8
 @app.middleware("http")
 async def add_charset(request, call_next):
     response = await call_next(request)
@@ -71,250 +71,58 @@ async def add_charset(request, call_next):
         response.headers["Content-Type"] = "application/json; charset=utf-8"
     return response
 
-# Carregar modelo de classificacao e dataset
-CLASSIFIER_PATH = Path(__file__).parent / "intent_classifier.joblib"
-DATASET_PATH = Path(__file__).parent / "intent_dataset.json"
-USE_ML_CLASSIFIER = False
-classifier_pipeline = None
-TECHNICAL_KEYWORDS = []
-GREETING_KEYWORDS = []
-dataset_rules = {}
 
-@app.on_event("startup")
-async def load_classifier():
-    """Carrega modelo ML e dataset de keywords."""
-    global classifier_pipeline, TECHNICAL_KEYWORDS, GREETING_KEYWORDS, dataset_rules
-    
-    try:
-        import json
-        with open(DATASET_PATH, 'r', encoding='utf-8') as f:
-            dataset = json.load(f)
-        
-        for category, words in dataset['keywords']['TECHNICAL'].items():
-            TECHNICAL_KEYWORDS.extend(words)
-        for category, words in dataset['keywords']['GREETING'].items():
-            GREETING_KEYWORDS.extend(words)
-        
-        dataset_rules = dataset.get('rules', {})
-        
-        logger.info(f"[OK] Dataset carregado: {len(TECHNICAL_KEYWORDS)} technical, {len(GREETING_KEYWORDS)} greeting keywords")
-    except Exception as e:
-        logger.error(f"[ERRO] Erro ao carregar dataset: {e}")
-    
-    try:
-        classifier_pipeline = joblib.load(CLASSIFIER_PATH)
-        logger.info(f"[OK] Intent classifier (ML) carregado de {CLASSIFIER_PATH}")
-    except Exception as e:
-        logger.error(f"[AVISO] Erro ao carregar classifier ML: {e}")
-        logger.warning("Sistema funcionara apenas com keywords")
+# =============================================================================
+# CONFIGURACOES
+# =============================================================================
 
+INFERENCE_URL = "http://127.0.0.1:8002"
+RAG_URL = "http://127.0.0.1:8003"
+WEB_SEARCH_URL = "http://127.0.0.1:8004"
 
-# URLs dos servicos internos
-INFERENCE_URL = "http://localhost:8002"
-RAG_URL = "http://localhost:8003"
-WEB_SEARCH_URL = "http://localhost:8004"
-
-# Configuracao do Agent (mutavel - pode ser alterado via API)
 AGENT_CONFIG = {
     "url": "http://localhost:9000",
     "enabled": True
 }
 
-# Constantes
-CONFIDENCE_THRESHOLD = 0.75
+# Carregar ML classifier e dataset de keywords
+CLASSIFIER_PATH = Path(__file__).parent / "intent_classifier.joblib"
+DATASET_PATH = Path(__file__).parent / "intent_dataset.json"
+classifier_pipeline = None
+TECHNICAL_KEYWORDS = []
+GREETING_KEYWORDS = []
 
-# =============================================================================
-# DETECCAO DE TIPO DE PEDIDO
-# =============================================================================
-
-EXECUTION_KEYWORDS = [
-    # Verbos de execução
-    "executa", "execute", "execute pra mim", "executa pra mim",
-    "roda", "rode", "roda pra mim", "rode pra mim",
-    "mostra", "mostre", "me mostra", "me mostre", 
-    "veja", "verifica", "verifique", "checa", "cheque",
-    "analisa", "analise", "diagnostica", "diagnostique",
-    "le", "leia", "ve", "olha", "olhe",
-    "consegue ver", "pode ver", "da pra ver",
-    "me diz", "me fala", "qual e", "quais sao",
-    "ta como", "esta como", "como esta", "como ta",
-    "pode executar", "consegue executar",
-    "roda ai", "executa ai", "verifica ai",
-    "me passa", "passa pra mim",
-    # Novos - pedidos diretos
-    "executa o comando", "roda o comando", "execute o comando",
-    "consegue executar", "pode executar", "da pra executar",
-    "consegue rodar", "pode rodar", "da pra rodar",
-    "executa pra mim", "roda pra mim", "faz pra mim",
-    "pra mim", "pra eu ver", "quero ver",
-]
-
-TUTORIAL_KEYWORDS = [
-    "como faco", "como fazer", "como eu faco",
-    "como configuro", "como configurar",
-    "como instalo", "como instalar", 
-    "ensina", "me ensina", "tutorial",
-    "qual comando", "quais comandos",
-    "passo a passo", "explica", "explique",
-    "o que e", "o que significa",
-    "para que serve", "pra que serve",
-]
-
-
-def detect_request_type(query: str) -> str:
-    """
-    Detecta se o usuario quer:
-    - EXECUTE: que a IA execute/analise algo no sistema
-    - TUTORIAL: que a IA ensine como fazer algo
-    - MIXED: ambos ou ambiguo
-    """
-    query_lower = query.lower()
+@app.on_event("startup")
+async def load_classifier():
+    """Carrega modelo ML e dataset de keywords."""
+    global classifier_pipeline, TECHNICAL_KEYWORDS, GREETING_KEYWORDS
     
-    exec_matches = sum(1 for kw in EXECUTION_KEYWORDS if kw in query_lower)
-    tutorial_matches = sum(1 for kw in TUTORIAL_KEYWORDS if kw in query_lower)
+    # Carregar keywords do dataset
+    try:
+        with open(DATASET_PATH, 'r', encoding='utf-8') as f:
+            dataset = json.load(f)
+        
+        for category, words in dataset.get('keywords', {}).get('TECHNICAL', {}).items():
+            TECHNICAL_KEYWORDS.extend(words)
+        for category, words in dataset.get('keywords', {}).get('GREETING', {}).items():
+            GREETING_KEYWORDS.extend(words)
+        
+        logger.info(f"[OK] Dataset carregado: {len(TECHNICAL_KEYWORDS)} technical, {len(GREETING_KEYWORDS)} greeting keywords")
+    except Exception as e:
+        logger.warning(f"[AVISO] Dataset nao carregado: {e}")
     
-    exec_patterns = [
-        r"(me )?(mostra|mostre|ve|veja|verifica|analisa|roda|executa)",
-        r"(consegue|pode|da pra) (ver|executar|rodar|mostrar)",
-        r"(qual|quais|como) (e|esta|ta) (o|a|meu|minha)",
-        r"(me )?diz (o|qual|como)",
-        # Novos padrões
-        r"(executa|roda|execute|rode) (o |esse |este )?(comando)",
-        r"(executa|roda) (pra|para) (mim|eu)",
-        r"(consegue|pode|da pra) (executar|rodar) (pra|para)? ?(mim)?",
-        r"(quero|preciso) (ver|saber)",
-    ]
-    
-    tutorial_patterns = [
-        r"como (eu )?(faco|fazer|configuro|instalo)",
-        r"(me )?(ensina|explica)",
-        r"qual (o )?comando (para|pra)",
-    ]
-    
-    for pattern in exec_patterns:
-        if re.search(pattern, query_lower):
-            exec_matches += 2
-    
-    for pattern in tutorial_patterns:
-        if re.search(pattern, query_lower):
-            tutorial_matches += 2
-    
-    logger.info(f"[DETECT] Request type: exec={exec_matches}, tutorial={tutorial_matches}")
-    
-    if exec_matches > tutorial_matches + 1:
-        return "EXECUTE"
-    elif tutorial_matches > exec_matches + 1:
-        return "TUTORIAL"
-    else:
-        return "MIXED"
+    # Carregar ML classifier
+    try:
+        classifier_pipeline = joblib.load(CLASSIFIER_PATH)
+        logger.info(f"[OK] ML classifier carregado")
+    except Exception as e:
+        logger.warning(f"[AVISO] ML classifier nao disponivel: {e}")
 
 
 # =============================================================================
-# PROMPTS OTIMIZADOS PARA QWEN2.5 (FORMATO CHATML)
+# COMANDOS DO AGENT
 # =============================================================================
 
-SYSTEM_PROMPT = """Voce e Lanne, uma assistente tecnica especializada em Linux e Debian.
-
-REGRAS OBRIGATORIAS:
-1. Responda APENAS em portugues brasileiro
-2. NUNCA use emojis ou emoticons
-3. NUNCA repita comandos com variacoes numericas (como -n 1, -n 10, -n 100...)
-4. Seja objetiva e concisa (maximo 4 paragrafos)
-5. Use crases para destacar comandos: `comando`
-6. Quando analisar dados do sistema, foque nos problemas encontrados"""
-
-
-def build_execution_prompt(query: str, context: str, has_agent_data: bool) -> str:
-    """
-    Prompt para quando o usuario pediu para EXECUTAR/ANALISAR algo.
-    Foca em analisar os dados coletados, nao em dar instrucoes.
-    """
-    if has_agent_data:
-        return f"""<|im_start|>system
-{SYSTEM_PROMPT}
-
-TAREFA ATUAL: O usuario pediu para voce analisar o sistema. Voce JA COLETOU os dados.
-Sua funcao agora e ANALISAR os dados, nao ensinar comandos.
-<|im_end|>
-<|im_start|>user
-Pergunta do usuario: {query}
-
-Dados coletados do sistema:
-{context[:2500]}
-
-Analise os dados acima e responda:
-- O que voce encontrou
-- Se ha erros ou problemas, destaque-os
-- Se esta tudo normal, diga isso brevemente
-<|im_end|>
-<|im_start|>assistant
-"""
-    else:
-        return f"""<|im_start|>system
-{SYSTEM_PROMPT}
-<|im_end|>
-<|im_start|>user
-{query}
-
-Contexto disponivel:
-{context[:2000]}
-
-Nao foi possivel coletar dados do sistema. Explique brevemente como o usuario pode verificar manualmente.
-<|im_end|>
-<|im_start|>assistant
-"""
-
-
-def build_tutorial_prompt(query: str, context: str) -> str:
-    """
-    Prompt para quando o usuario quer INSTRUCOES/TUTORIAL.
-    """
-    return f"""<|im_start|>system
-{SYSTEM_PROMPT}
-
-TAREFA ATUAL: O usuario quer aprender como fazer algo.
-De instrucoes claras com no maximo 3 comandos.
-<|im_end|>
-<|im_start|>user
-{query}
-
-Referencia:
-{context[:2000]}
-<|im_end|>
-<|im_start|>assistant
-"""
-
-
-def build_mixed_prompt(query: str, context: str, has_agent_data: bool) -> str:
-    """
-    Prompt para casos ambiguos.
-    """
-    agent_note = ""
-    if has_agent_data:
-        agent_note = "Os dados abaixo sao do sistema do usuario. Analise-os primeiro."
-    
-    return f"""<|im_start|>system
-{SYSTEM_PROMPT}
-<|im_end|>
-<|im_start|>user
-{query}
-
-{agent_note}
-
-Contexto:
-{context[:2000]}
-
-Responda de forma pratica e direta.
-<|im_end|>
-<|im_start|>assistant
-"""
-
-
-# =============================================================================
-# COLETA DE DADOS DO AGENT (v3 - LLM DECIDE)
-# =============================================================================
-
-# Todos os comandos disponiveis no agent
 AGENT_COMMANDS = {
     # Logs
     "journalctl": "Logs do systemd - erros gerais, eventos recentes",
@@ -350,55 +158,174 @@ AGENT_COMMANDS = {
 }
 
 
-def _build_agent_router_prompt(query: str) -> str:
-    """Constroi prompt para o LLM decidir comandos"""
+# =============================================================================
+# ESTRUTURA DO PLANO DE EXECUCAO
+# =============================================================================
+
+@dataclass
+class ExecutionPlan:
+    """Plano de execucao decidido pelo LLM"""
+    intent: str  # GREETING, CASUAL, TECHNICAL
+    use_agent: bool = False
+    agent_commands: List[str] = field(default_factory=list)
+    use_rag: bool = False
+    use_web: bool = False
+    response_style: str = "CHAT"  # CHAT, ANALYZE, TUTORIAL
+    reasoning: str = ""  # Raciocinio do LLM
     
-    commands_list = "\n".join(f"- {cmd}: {desc}" for cmd, desc in AGENT_COMMANDS.items())
+    def to_dict(self) -> dict:
+        return {
+            "intent": self.intent,
+            "use_agent": self.use_agent,
+            "agent_commands": self.agent_commands,
+            "use_rag": self.use_rag,
+            "use_web": self.use_web,
+            "response_style": self.response_style,
+            "reasoning": self.reasoning
+        }
+
+
+@dataclass
+class ExecutionContext:
+    """Contexto coletado durante execucao"""
+    agent_data: Optional[str] = None
+    rag_data: Optional[str] = None
+    rag_similarity: float = 0.0
+    web_data: Optional[str] = None
+    sources: List[str] = field(default_factory=list)
     
+    def has_data(self) -> bool:
+        return any([self.agent_data, self.rag_data, self.web_data])
+    
+    def build_context(self) -> str:
+        """Monta contexto formatado para o LLM"""
+        parts = []
+        
+        if self.agent_data:
+            parts.append(self.agent_data)
+        
+        if self.rag_data:
+            parts.append(f"[BASE DE CONHECIMENTO]\n{self.rag_data}")
+        
+        if self.web_data:
+            parts.append(f"[PESQUISA WEB]\n{self.web_data}")
+        
+        return "\n\n".join(parts) if parts else ""
+
+
+# =============================================================================
+# PROMPTS DO SISTEMA ReAct
+# =============================================================================
+
+SYSTEM_PROMPT = """Voce e Lanne, uma assistente tecnica especializada em Linux e Debian.
+
+REGRAS OBRIGATORIAS:
+1. Responda APENAS em portugues brasileiro
+2. NUNCA use emojis ou emoticons
+3. Seja objetiva e concisa (maximo 4 paragrafos)
+4. Use crases para destacar comandos: `comando`
+5. Quando analisar dados do sistema, foque nos problemas encontrados"""
+
+
+def build_planner_prompt(query: str) -> str:
+    """
+    Prompt para o LLM decidir QUAIS RECURSOS usar para uma query TECHNICAL.
+    A intencao ja foi classificada como TECHNICAL pelo ML classifier.
+    """
+    commands_list = ", ".join(AGENT_COMMANDS.keys())
+    
+    prompt = f"""<|im_start|>system
+Decida quais recursos usar para responder sobre Linux.
+
+COMANDOS: {commands_list}
+
+REGRAS SIMPLES:
+- "ver/mostrar/verificar" + sistema (memoria, disco, usuarios, etc) = use_agent:true
+- "como instalar/configurar" = use_rag:true
+- "problema" + sistema = use_agent:true, use_rag:true
+
+EXEMPLOS:
+"quem esta logado" -> use_agent:true, agent_commands:["logged_users"]
+"pode ver a memoria" -> use_agent:true, agent_commands:["memory_detailed"]
+"como instalar docker" -> use_agent:false, use_rag:true
+"disco cheio o que faco" -> use_agent:true, agent_commands:["disk_usage"], use_rag:true
+
+JSON (uma linha):
+{{"use_agent":true,"agent_commands":["cmd"],"use_rag":false,"use_web":false,"response_style":"ANALYZE"}}
+<|im_end|>
+<|im_start|>user
+{query}
+<|im_end|>
+<|im_start|>assistant
+"""
+    prompt += '{"use_agent":'
+    return prompt
+
+
+def build_evaluator_prompt(query: str, agent_data: str) -> str:
+    """
+    Prompt para avaliar se os dados coletados sao suficientes.
+    """
     return f"""<|im_start|>system
-Voce e um roteador de comandos para monitoramento Linux.
-Analise a pergunta e decida quais comandos executar NO SISTEMA DO USUARIO.
+Voce e um avaliador de contexto. Analise os dados coletados e decida se precisa de mais informacao.
 
-COMANDOS DISPONIVEIS:
-{commands_list}
-
-MAPEAMENTO DE COMANDOS LINUX:
-- who, w, usuarios logados -> logged_users
-- free, memoria, ram -> memory_detailed
-- df, disco, espaco -> disk_usage
-- top, htop, processos -> processes_top
-- ip, ifconfig, rede -> network_info
-- netstat, ss, portas, conexoes -> network_connections
-- uptime, tempo ligado -> uptime
-- uname, versao, distro -> os_release
-- journalctl, logs -> journalctl
-- dmesg, kernel -> dmesg
-- systemctl, servicos -> systemctl_list
+RESPONDA APENAS com JSON:
+{{
+  "sufficient": true|false,
+  "need_rag": true|false,
+  "need_web": true|false,
+  "reason": "explicacao curta"
+}}
 
 REGRAS:
-1. Se o usuario pede para EXECUTAR, RODAR, VER, MOSTRAR, VERIFICAR algo -> retorne o comando
-2. Se o usuario menciona um comando Linux (who, free, df, top, etc) -> retorne o equivalente
-3. Maximo 3 comandos, separados por virgula
-4. APENAS retorne NONE se for conversa casual ou pedido de tutorial/explicacao
+- Se os dados respondem a pergunta completamente -> sufficient=true
+- Se precisa de documentacao/tutorial para complementar -> need_rag=true
+- Se precisa de informacao externa/atualizada -> need_web=true
+- Na duvida, prefira sufficient=true (evitar buscas desnecessarias)
+<|im_end|>
+<|im_start|>user
+PERGUNTA: {query}
 
-EXECUTE (retorne comandos):
-- "executa o comando who" -> logged_users
-- "roda o who pra mim" -> logged_users
-- "mostra quem ta logado" -> logged_users
-- "verifica a memoria" -> memory_detailed
-- "como ta o disco" -> disk_usage
-- "me mostra os processos" -> processes_top
-- "qual meu IP" -> network_info
-- "ve o uptime" -> uptime
-- "quais suas capacidades" -> NONE
-- "o que voce sabe fazer" -> NONE
+DADOS COLETADOS:
+{agent_data[:2000]}
 
-NAO EXECUTE (retorne NONE):
-- "ola tudo bem" -> NONE
-- "como instalar apache" -> NONE
-- "o que e o comando who" -> NONE
-- "me explica o top" -> NONE
-- "quem e voce" -> NONE
+Os dados acima sao suficientes para responder a pergunta?
+<|im_end|>
+<|im_start|>assistant
+"""
+
+
+def build_response_prompt(query: str, context: str, style: str) -> str:
+    """
+    Prompt para gerar a resposta final.
+    """
+    style_instructions = {
+        "CHAT": "Responda de forma casual e amigavel.",
+        "ANALYZE": "Analise os dados coletados. Foque em: o que encontrou, problemas/alertas, e recomendacoes.",
+        "TUTORIAL": "De instrucoes claras e praticas. Use no maximo 3-4 comandos principais."
+    }
+    
+    instruction = style_instructions.get(style, style_instructions["CHAT"])
+    
+    if context:
+        return f"""<|im_start|>system
+{SYSTEM_PROMPT}
+
+{instruction}
+<|im_end|>
+<|im_start|>user
+{query}
+
+CONTEXTO DISPONIVEL:
+{context[:3000]}
+<|im_end|>
+<|im_start|>assistant
+"""
+    else:
+        return f"""<|im_start|>system
+{SYSTEM_PROMPT}
+
+{instruction}
 <|im_end|>
 <|im_start|>user
 {query}
@@ -407,167 +334,192 @@ NAO EXECUTE (retorne NONE):
 """
 
 
-def _quick_keyword_check(query: str) -> list:
-    """
-    Checagem rapida de keywords para casos obvios.
-    Evita chamar o LLM para queries simples.
-    """
-    q = query.lower().strip()
-    
-    # Mapeamento direto de palavras-chave -> comandos
-    direct_map = {
-        "memoria": ["memory_detailed"],
-        "memória": ["memory_detailed"],
-        "ram": ["memory_detailed"],
-        "disco": ["disk_usage"],
-        "disk": ["disk_usage"],
-        "rede": ["network_info"],
-        "network": ["network_info"],
-        "ip": ["network_info"],
-        "processos": ["processes_top"],
-        "processo": ["processes_top"],
-        "cpu": ["cpu_usage"],
-        "uptime": ["uptime"],
-        "logs": ["journalctl"],
-        "log": ["journalctl"],
-        "servicos": ["systemctl_list"],
-        "serviços": ["systemctl_list"],
-    }
-    
-    # Se query é só uma palavra, usar mapeamento direto
-    if len(q.split()) <= 2:
-        for keyword, cmds in direct_map.items():
-            if keyword in q:
-                return cmds
-    
-    # Mapeamento de comandos Linux mencionados
-    linux_commands = {
-        "who": "logged_users",
-        "w ": "logged_users",
-        "free": "memory_detailed",
-        "df": "disk_usage",
-        "top": "processes_top",
-        "htop": "processes_top",
-        "ps": "processes_top",
-        "ifconfig": "network_info",
-        "ip addr": "network_info",
-        "netstat": "network_connections",
-        "ss ": "network_connections",
-        "journalctl": "journalctl",
-        "dmesg": "dmesg",
-        "systemctl": "systemctl_list",
-        "uname": "os_release",
-    }
-    
-    # Se menciona um comando Linux especifico
-    for linux_cmd, agent_cmd in linux_commands.items():
-        if linux_cmd in q:
-            return [agent_cmd]
-    
-    return []  # Vazio = deixa o LLM decidir
+# =============================================================================
+# FUNCOES DE EXECUCAO
+# =============================================================================
+
+async def call_llm(prompt: str, max_tokens: int = 512, temperature: float = 0.3) -> str:
+    """Chama o servico de inferencia LLM."""
+    try:
+        async with httpx.AsyncClient(timeout=60.0) as client:
+            response = await client.post(
+                f"{INFERENCE_URL}/internal/generate",
+                json={
+                    "prompt": prompt,
+                    "max_tokens": max_tokens,
+                    "temperature": temperature,
+                    "top_p": 0.9
+                }
+            )
+            response.raise_for_status()
+            result = response.json()
+            return result.get("generated_text", "").strip()
+    except Exception as e:
+        logger.error(f"[LLM] Erro: {e}")
+        raise
 
 
-async def _llm_decide_commands(query: str) -> list:
-    """Usa o LLM para decidir quais comandos executar"""
-    
-    # Primeiro tenta checagem rapida
-    quick_result = _quick_keyword_check(query)
-    if quick_result:
-        logger.info(f"[AGENT] Quick match: {quick_result}")
-        return quick_result
-    
-    prompt = _build_agent_router_prompt(query)
-    
-    async with httpx.AsyncClient(timeout=15.0) as client:
-        response = await client.post(
-            f"{INFERENCE_URL}/internal/classify",
-            json={
-                "prompt": prompt,
-                "max_tokens": 50,
-                "temperature": 0.1,
-                "top_p": 0.9
-            }
-        )
-        
-        if response.status_code != 200:
-            logger.error(f"[AGENT] LLM retornou {response.status_code}")
-            return []
-        
-        result = response.json()
-        text = result.get("generated_text", "").strip()
-        
-        logger.info(f"[AGENT] LLM respondeu: '{text[:100]}'")
-        
-        # Se vazio, retorna vazio
-        if not text:
-            return []
-        
-        # Limpar resposta - pegar primeira linha, remover lixo
-        first_line = text.split('\n')[0].strip()
-        
-        # Remover prefixos comuns que o LLM pode adicionar
-        prefixes_to_remove = [
-            "comandos:", "comando:", "execute:", "executar:",
-            "->", "=>", ":", "-"
-        ]
-        for prefix in prefixes_to_remove:
-            if first_line.lower().startswith(prefix):
-                first_line = first_line[len(prefix):].strip()
-        
-        # Limpar caracteres especiais
-        cleaned = re.sub(r'[^a-zA-Z0-9_,\s]', '', first_line)
-        cleaned = cleaned.upper().strip()
-        
-        logger.info(f"[AGENT] Apos limpeza: '{cleaned}'")
-        
-        if cleaned == "NONE" or not cleaned:
-            return []
-        
-        # Validar comandos
-        commands = []
-        for cmd in cleaned.lower().replace(" ", "").split(","):
-            cmd = cmd.strip()
-            if cmd in AGENT_COMMANDS and cmd not in commands:
-                commands.append(cmd)
-        
-        if not commands:
-            logger.warning(f"[AGENT] Nenhum comando valido extraido de: '{text[:50]}'")
-        
-        return commands[:3]
+async def call_llm_classify(prompt: str, max_tokens: int = 100) -> str:
+    """Chama LLM para classificacao (temperatura baixa)."""
+    try:
+        async with httpx.AsyncClient(timeout=15.0) as client:
+            response = await client.post(
+                f"{INFERENCE_URL}/internal/classify",
+                json={
+                    "prompt": prompt,
+                    "max_tokens": max_tokens,
+                    "temperature": 0.1,
+                    "top_p": 0.9
+                }
+            )
+            response.raise_for_status()
+            result = response.json()
+            return result.get("generated_text", "").strip()
+    except Exception as e:
+        logger.error(f"[LLM_CLASSIFY] Erro: {e}")
+        raise
 
 
-async def collect_agent_logs(query: str) -> Optional[str]:
+def parse_json_response(text: str) -> dict:
     """
-    Coleta dados do Agent Linux baseado na query.
-    O LLM decide quais comandos executar.
+    Extrai JSON da resposta do LLM.
+    Robusto contra malformacoes comuns do Qwen2.5.
     """
-    logger.info(f"[AGENT] Processando: {query}")
+    if not text:
+        return {}
     
+    # Limpar o texto
+    cleaned = text.strip()
+    
+    # Remover escapes estranhos que o modelo adiciona
+    cleaned = cleaned.replace('\\"', '"')
+    cleaned = cleaned.replace("\\'", "'")
+    
+    # Remover parenteses nas chaves: "(intent)" -> "intent"
+    cleaned = re.sub(r'"\((\w+)\)"', r'"\1"', cleaned)
+    
+    # Corrigir valores booleanos com case errado ou como string
+    cleaned = re.sub(r':\s*"true"', ': true', cleaned, flags=re.IGNORECASE)
+    cleaned = re.sub(r':\s*"false"', ': false', cleaned, flags=re.IGNORECASE)
+    cleaned = re.sub(r':\s*True\b', ': true', cleaned)
+    cleaned = re.sub(r':\s*False\b', ': false', cleaned)
+    
+    # Normalizar valores de intent em portugues
+    cleaned = re.sub(r'"TECHNICO"', '"TECHNICAL"', cleaned, flags=re.IGNORECASE)
+    cleaned = re.sub(r'"TECNICO"', '"TECHNICAL"', cleaned, flags=re.IGNORECASE)
+    cleaned = re.sub(r'"SAUDACAO"', '"GREETING"', cleaned, flags=re.IGNORECASE)
+    
+    # Normalizar response_style em portugues
+    cleaned = re.sub(r'"ANALISE"', '"ANALYZE"', cleaned, flags=re.IGNORECASE)
+    cleaned = re.sub(r'"ANALISAR"', '"ANALYZE"', cleaned, flags=re.IGNORECASE)
+    cleaned = re.sub(r'"CONVERSA"', '"CHAT"', cleaned, flags=re.IGNORECASE)
+    
+    # Tentar encontrar JSON completo primeiro
+    json_match = re.search(r'\{.*\}', cleaned, re.DOTALL)
+    if json_match:
+        json_str = json_match.group()
+        
+        # Tentar parsear direto
+        try:
+            return json.loads(json_str)
+        except json.JSONDecodeError:
+            pass
+        
+        # Se falhou, tentar consertar JSON truncado
+        # Contar chaves e colchetes
+        open_braces = json_str.count('{')
+        close_braces = json_str.count('}')
+        open_brackets = json_str.count('[')
+        close_brackets = json_str.count(']')
+        
+        # Adicionar fechamentos faltando
+        json_str += ']' * (open_brackets - close_brackets)
+        json_str += '}' * (open_braces - close_braces)
+        
+        try:
+            return json.loads(json_str)
+        except json.JSONDecodeError:
+            pass
+    
+    # Fallback: extrair campos manualmente com regex
+    result = {}
+    
+    # intent
+    intent_match = re.search(r'"intent"\s*:\s*"(\w+)"', cleaned, re.IGNORECASE)
+    if intent_match:
+        intent = intent_match.group(1).upper()
+        # Normalizar variações
+        if intent in ["GREETING", "SAUDACAO"]:
+            result["intent"] = "GREETING"
+        elif intent in ["CASUAL"]:
+            result["intent"] = "CASUAL"
+        elif intent in ["TECHNICAL", "TECHNICO", "TECNICO"]:
+            result["intent"] = "TECHNICAL"
+        else:
+            result["intent"] = "TECHNICAL"  # default
+    
+    # use_agent
+    agent_match = re.search(r'"use_agent"\s*:\s*"?(true|false)"?', cleaned, re.IGNORECASE)
+    if agent_match:
+        result["use_agent"] = agent_match.group(1).lower() == "true"
+    
+    # agent_commands
+    commands_match = re.search(r'"agent_commands"\s*:\s*\[(.*?)\]', cleaned, re.DOTALL)
+    if commands_match:
+        commands_str = commands_match.group(1)
+        commands = re.findall(r'"(\w+)"', commands_str)
+        result["agent_commands"] = [c for c in commands if c in AGENT_COMMANDS]
+    
+    # use_rag
+    rag_match = re.search(r'"use_rag"\s*:\s*"?(true|false)"?', cleaned, re.IGNORECASE)
+    if rag_match:
+        result["use_rag"] = rag_match.group(1).lower() == "true"
+    
+    # use_web
+    web_match = re.search(r'"use_web"\s*:\s*"?(true|false)"?', cleaned, re.IGNORECASE)
+    if web_match:
+        result["use_web"] = web_match.group(1).lower() == "true"
+    
+    # response_style
+    style_match = re.search(r'"response_style"\s*:\s*"(\w+)"', cleaned, re.IGNORECASE)
+    if style_match:
+        style = style_match.group(1).upper()
+        if style in ["CHAT", "CONVERSA"]:
+            result["response_style"] = "CHAT"
+        elif style in ["ANALYZE", "ANALISE", "ANALISAR"]:
+            result["response_style"] = "ANALYZE"
+        elif style in ["TUTORIAL"]:
+            result["response_style"] = "TUTORIAL"
+    
+    # reasoning
+    reason_match = re.search(r'"reasoning"\s*:\s*"([^"]*)"', cleaned)
+    if reason_match:
+        result["reasoning"] = reason_match.group(1)
+    
+    if result:
+        logger.info(f"[PARSER] Extraido: {result}")
+    return result
+
+
+async def execute_agent_commands(commands: List[str]) -> Optional[str]:
+    """Executa comandos no agent Linux."""
     if not AGENT_CONFIG["enabled"]:
         logger.warning("[AGENT] Desabilitado")
         return None
     
-    agent_url = AGENT_CONFIG["url"]
-    
-    # LLM decide os comandos
-    try:
-        commands = await _llm_decide_commands(query)
-    except Exception as e:
-        logger.error(f"[AGENT] Erro ao consultar LLM: {e}")
-        return None
-    
     if not commands:
-        logger.info("[AGENT] LLM decidiu: NONE (nenhum comando necessario)")
         return None
     
-    logger.info(f"[AGENT] Executando comandos: {commands}")
-    
-    # Executa comandos
+    agent_url = AGENT_CONFIG["url"]
     outputs = []
     
     try:
         async with httpx.AsyncClient(timeout=20.0) as client:
-            for cmd in commands:
+            for cmd in commands[:3]:  # Maximo 3 comandos
+                if cmd not in AGENT_COMMANDS:
+                    logger.warning(f"[AGENT] Comando invalido ignorado: {cmd}")
+                    continue
+                
                 params = {"lines": "100"} if cmd == "journalctl" else {}
                 
                 response = await client.post(
@@ -584,40 +536,184 @@ async def collect_agent_logs(query: str) -> Optional[str]:
                         logger.info(f"[AGENT] {cmd}: {len(output)} chars")
     
     except Exception as e:
-        logger.error(f"[AGENT] Erro na execucao: {e}")
+        logger.error(f"[AGENT] Erro: {e}")
         return None
     
     if not outputs:
-        logger.warning("[AGENT] Nenhum comando retornou dados")
         return None
     
-    # Formata resultado
+    # Formatar resultado
     parts = ["[DADOS DO SISTEMA]", "=" * 50]
-    
     for cmd, output in outputs:
         parts.append(f"\n>> {cmd.upper()}: {AGENT_COMMANDS[cmd]}")
         parts.append("-" * 40)
         parts.append(output)
-    
     parts.append("\n" + "=" * 50)
     
-    formatted = "\n".join(parts)
-    logger.info(f"[AGENT] Total: {len(formatted)} chars de {len(outputs)} comando(s)")
-    
-    return formatted
+    return "\n".join(parts)
+
+
+async def search_rag(query: str) -> tuple[Optional[str], float]:
+    """Busca na base de conhecimento RAG."""
+    try:
+        async with httpx.AsyncClient(timeout=10.0) as client:
+            response = await client.post(
+                f"{RAG_URL}/internal/search",
+                json={"query": query, "top_k": 3, "threshold": 0.0}
+            )
+            response.raise_for_status()
+            result = response.json()
+        
+        documents = result.get("documents", [])
+        max_sim = result.get("max_similarity", 0.0)
+        
+        if documents and max_sim > 0.5:
+            rag_text = "\n\n".join([doc["text"][:500] for doc in documents])
+            return rag_text, max_sim
+        
+        return None, max_sim
+        
+    except Exception as e:
+        logger.error(f"[RAG] Erro: {e}")
+        return None, 0.0
+
+
+async def search_web(query: str) -> Optional[str]:
+    """Busca na web."""
+    try:
+        async with httpx.AsyncClient(timeout=15.0) as client:
+            response = await client.post(
+                f"{WEB_SEARCH_URL}/internal/web_search",
+                json={"query": f"Linux Debian {query}", "max_results": 3}
+            )
+            response.raise_for_status()
+            result = response.json()
+        
+        results = result.get("results", [])
+        if results:
+            web_text = "\n\n".join([
+                f"- {r.get('title', 'Sem titulo')}\n{r.get('snippet', '')[:300]}"
+                for r in results
+            ])
+            return web_text
+        
+        return None
+        
+    except Exception as e:
+        logger.error(f"[WEB] Erro: {e}")
+        return None
 
 
 # =============================================================================
-# POS-PROCESSAMENTO DE RESPOSTA
+# CLASSIFICACAO DE INTENCAO (ML + LLM)
+# =============================================================================
+
+async def classify_intent(query: str) -> str:
+    """
+    Classificacao hibrida de intencao:
+    1. ML Classifier decide primeiro (rapido)
+    2. LLM valida apenas casos duvidosos
+    
+    Retorna: "GREETING", "CASUAL" ou "TECHNICAL"
+    """
+    global classifier_pipeline, GREETING_KEYWORDS, TECHNICAL_KEYWORDS
+    
+    query_lower = query.lower().strip()
+    
+    # =========================================================
+    # REGRA RAPIDA: Saudacoes curtas = GREETING
+    # =========================================================
+    greetings = ["oi", "ola", "olá", "bom dia", "boa tarde", "boa noite", 
+                 "e ai", "eai", "hey", "opa", "fala", "salve"]
+    
+    # Query curta que começa com saudação
+    if len(query.split()) <= 4:
+        for g in greetings:
+            if query_lower == g or query_lower.startswith(g + " ") or query_lower.startswith(g + ","):
+                logger.info(f"[INTENT] '{query}' -> GREETING (regra rapida)")
+                return "GREETING"
+    
+    # =========================================================
+    # REGRA RAPIDA: Casual (agradecimentos, despedidas)
+    # =========================================================
+    casual_patterns = ["obrigado", "valeu", "brigado", "vlw", "tchau", "ate mais", 
+                       "até mais", "falou", "tmj", "quem e voce", "quem é você",
+                       "o que voce faz", "o que você faz", "o que voce sabe"]
+    
+    if any(p in query_lower for p in casual_patterns):
+        logger.info(f"[INTENT] '{query}' -> CASUAL (regra rapida)")
+        return "CASUAL"
+    
+    # =========================================================
+    # ML CLASSIFIER
+    # =========================================================
+    ml_prediction = None
+    ml_confidence = 0.0
+    
+    if classifier_pipeline is not None:
+        try:
+            ml_prediction = classifier_pipeline.predict([query])[0]
+            if hasattr(classifier_pipeline.named_steps.get('classifier', {}), 'predict_proba'):
+                probabilities = classifier_pipeline.predict_proba([query])[0]
+                ml_confidence = float(max(probabilities))
+            else:
+                ml_confidence = 0.80
+            
+            logger.info(f"[INTENT] ML: '{query[:30]}' -> {ml_prediction} (conf={ml_confidence:.2f})")
+            
+        except Exception as e:
+            logger.error(f"[INTENT] ML erro: {e}")
+    
+    # =========================================================
+    # DECISAO
+    # =========================================================
+    
+    # ML confiante (>= 0.80) -> usa direto
+    if ml_prediction and ml_confidence >= 0.80:
+        logger.info(f"[INTENT] Final: {ml_prediction} (ML confiante)")
+        return ml_prediction
+    
+    # ML deu CASUAL mas query tem palavras técnicas -> valida com LLM
+    technical_hints = ["memoria", "memória", "disco", "cpu", "rede", "ip", "processo",
+                       "servico", "serviço", "log", "usuario", "usuário", "uptime",
+                       "comando", "instalar", "configurar", "executar", "rodar"]
+    
+    has_tech_hints = any(h in query_lower for h in technical_hints)
+    
+    if ml_prediction == "CASUAL" and has_tech_hints:
+        logger.info(f"[INTENT] ML deu CASUAL mas tem hints tecnicos -> TECHNICAL")
+        return "TECHNICAL"
+    
+    # ML tem resultado razoável -> usa
+    if ml_prediction and ml_confidence >= 0.60:
+        logger.info(f"[INTENT] Final: {ml_prediction} (ML razoavel)")
+        return ml_prediction
+    
+    # =========================================================
+    # FALLBACK: Keywords
+    # =========================================================
+    tech_matches = sum(1 for kw in TECHNICAL_KEYWORDS if kw in query_lower)
+    greeting_matches = sum(1 for kw in GREETING_KEYWORDS if kw in query_lower)
+    
+    if greeting_matches > tech_matches and greeting_matches > 0:
+        logger.info(f"[INTENT] Final: GREETING (keywords)")
+        return "GREETING"
+    
+    if tech_matches >= 1:
+        logger.info(f"[INTENT] Final: TECHNICAL (keywords)")
+        return "TECHNICAL"
+    
+    # Default: CASUAL
+    logger.info(f"[INTENT] Final: CASUAL (default)")
+    return "CASUAL"
+
+
+# =============================================================================
+# LIMPEZA DE RESPOSTA
 # =============================================================================
 
 def clean_response(text: str) -> str:
-    """
-    Limpa a resposta do LLM:
-    - Remove emojis
-    - Remove repeticoes
-    - Remove tokens especiais
-    """
+    """Limpa a resposta do LLM."""
     # Remover emojis
     emoji_pattern = re.compile(
         "["
@@ -632,13 +728,13 @@ def clean_response(text: str) -> str:
     )
     text = emoji_pattern.sub('', text)
     
-    # Remover tokens do ChatML
+    # Remover tokens ChatML
     text = re.sub(r'<\|im_start\|>.*?<\|im_end\|>', '', text, flags=re.DOTALL)
     text = re.sub(r'<\|im_start\|>', '', text)
     text = re.sub(r'<\|im_end\|>', '', text)
     text = re.sub(r'<\|endoftext\|>', '', text)
     
-    # Remover tokens do Mistral (caso ainda use)
+    # Remover tokens Mistral
     text = re.sub(r'\[INST\].*?\[/INST\]', '', text, flags=re.DOTALL)
     text = re.sub(r'\[INST\]', '', text)
     text = re.sub(r'\[/INST\]', '', text)
@@ -665,394 +761,498 @@ def clean_response(text: str) -> str:
 
 
 # =============================================================================
-# PIPELINE TECNICO
+# ORCHESTRADOR ReAct
 # =============================================================================
 
-async def handle_technical(query: str) -> ChatResponse:
+class ReactOrchestrator:
     """
-    Pipeline de RAG hibrido para consultas tecnicas
+    Orquestrador com arquitetura ReAct.
+    
+    FLUXO:
+    1. classify_intent() - ML + regras decide GREETING/CASUAL/TECHNICAL
+    2. Se GREETING/CASUAL -> resposta direta
+    3. Se TECHNICAL -> LLM planner decide agent_commands, use_rag, etc.
     """
-    try:
-        request_type = detect_request_type(query)
-        logger.info(f"[PIPELINE] Tipo de request: {request_type}")
+    
+    async def create_plan(self, query: str) -> ExecutionPlan:
+        """
+        ETAPA 1: Classificar intencao e criar plano de execucao.
         
-        # Etapa 1: Coleta de logs do agent
-        logger.info("[PIPELINE] 1/4 - Coletando dados do agent...")
-        agent_logs = await collect_agent_logs(query)
-        has_agent_data = agent_logs is not None
-        logger.info(f"[PIPELINE] Agent: {'coletado' if has_agent_data else 'sem dados'}")
+        - GREETING/CASUAL: plano simples, sem LLM planner
+        - TECHNICAL: LLM planner decide os recursos
+        """
+        logger.info(f"[REACT] Criando plano para: {query[:50]}...")
         
-        # Etapa 2: Busca interna no FAISS
-        logger.info("[PIPELINE] 2/4 - Buscando na base de conhecimento...")
-        rag_request = RAGSearchRequest(
-            query=query,
-            top_k=3,
-            threshold=0.0
-        )
+        # PASSO 1: Classificar intencao (ML + regras)
+        intent = await classify_intent(query)
         
-        async with httpx.AsyncClient(timeout=10.0) as client:
-            response = await client.post(
-                f"{RAG_URL}/internal/search",
-                json=rag_request.model_dump()
+        # PASSO 2: Se nao e TECHNICAL, retorna plano simples
+        if intent == "GREETING":
+            logger.info(f"[REACT] Plano: GREETING (sem planner LLM)")
+            return ExecutionPlan(intent="GREETING", response_style="CHAT")
+        
+        if intent == "CASUAL":
+            logger.info(f"[REACT] Plano: CASUAL (sem planner LLM)")
+            return ExecutionPlan(intent="CASUAL", response_style="CHAT")
+        
+        # PASSO 3: TECHNICAL - chamar LLM planner para decidir recursos
+        logger.info(f"[REACT] Intent=TECHNICAL, chamando planner LLM...")
+        
+        prompt = build_planner_prompt(query)
+        
+        try:
+            response = await call_llm_classify(prompt, max_tokens=150)
+            
+            # O prompt já começa com '{"use_agent":', então precisamos completar
+            full_json = '{"use_agent":' + response
+            
+            logger.info(f"[REACT] Planner respondeu: {full_json[:200]}")
+            
+            plan_dict = parse_json_response(full_json)
+            
+            if not plan_dict:
+                logger.warning("[REACT] Falha ao parsear plano, usando fallback")
+                return self._fallback_plan(query)
+            
+            # Validar comandos do agent
+            valid_commands = [
+                cmd for cmd in plan_dict.get("agent_commands", [])
+                if cmd in AGENT_COMMANDS
+            ]
+            
+            # Determinar response_style
+            style = plan_dict.get("response_style", "")
+            if style not in ["ANALYZE", "TUTORIAL", "CHAT"]:
+                style = "ANALYZE" if plan_dict.get("use_agent") else "TUTORIAL"
+            
+            # VALIDACAO: Se TECHNICAL mas nao pediu nada, algo deu errado
+            use_agent = plan_dict.get("use_agent", False)
+            use_rag = plan_dict.get("use_rag", False)
+            use_web = plan_dict.get("use_web", False)
+            
+            if not use_agent and not use_rag and not use_web:
+                logger.warning("[REACT] Plano vazio para TECHNICAL, usando fallback")
+                return self._fallback_plan(query)
+            
+            # Forcar intent=TECHNICAL (ja classificamos acima)
+            plan = ExecutionPlan(
+                intent="TECHNICAL",
+                use_agent=use_agent,
+                agent_commands=valid_commands,
+                use_rag=use_rag,
+                use_web=use_web,
+                response_style=style,
+                reasoning=plan_dict.get("reasoning", "")
             )
-            response.raise_for_status()
-            rag_response = response.json()
-        
-        logger.info("[PIPELINE] RAG search completo")
-        
-        max_similarity = rag_response.get("max_similarity", 0.0)
-        documents = rag_response.get("documents", [])
-        
-        # Montar contexto
-        context_parts = []
-        sources = []
-        used_web = False
-        
-        # Adicionar logs do agent PRIMEIRO
-        if agent_logs:
-            context_parts.append(agent_logs)
-            sources.append("linux-agent")
-        
-        # Adicionar RAG se relevante
-        if max_similarity >= CONFIDENCE_THRESHOLD:
-            logger.info(f"[PIPELINE] Usando conhecimento interno (sim: {max_similarity:.2f})")
-            rag_context = "\n\n".join([doc["text"][:500] for doc in documents])
-            context_parts.append(f"[BASE DE CONHECIMENTO]\n{rag_context}")
-            sources.extend([doc.get("metadata", {}).get("source", "internal") for doc in documents])
-        else:
-            # Fallback: buscar na web
-            logger.info(f"[PIPELINE] 3/4 - Baixa similaridade ({max_similarity:.2f}), buscando na web...")
             
-            web_query = f"Linux Debian {query}"
-            web_request = WebSearchRequest(query=web_query, max_results=3)
+            logger.info(f"[REACT] Plano criado: {plan.to_dict()}")
+            return plan
             
-            async with httpx.AsyncClient(timeout=15.0) as client:
-                response = await client.post(
-                    f"{WEB_SEARCH_URL}/internal/web_search",
-                    json=web_request.model_dump()
-                )
-                response.raise_for_status()
-                web_response = response.json()
-            
-            web_results = web_response.get("results", [])
-            if web_results:
-                web_context = "\n\n".join([
-                    f"- {r.get('title', 'Sem titulo')}\n{r.get('snippet', '')[:300]}"
-                    for r in web_results
-                ])
-                context_parts.append(f"[PESQUISA WEB]\n{web_context}")
-                sources.extend([r.get("url", "") for r in web_results])
-                used_web = True
+        except Exception as e:
+            logger.error(f"[REACT] Erro ao criar plano: {e}")
+            return self._fallback_plan(query)
+    
+    def _fallback_plan(self, query: str) -> ExecutionPlan:
+        """
+        Plano fallback INTELIGENTE quando LLM falha.
+        Analisa a query para decidir os recursos necessarios.
+        """
+        q = query.lower()
+        logger.info(f"[FALLBACK] Analisando: {q[:50]}")
         
-        # Consolidar contexto
-        context = "\n\n".join(context_parts)
+        # =====================================================
+        # DETECÇÃO DE PEDIDO DE EXECUÇÃO
+        # =====================================================
+        exec_patterns = [
+            # Verbos de execução
+            "pode ver", "pode mostrar", "pode verificar", "pode executar", "pode rodar",
+            "consegue ver", "consegue mostrar", "consegue verificar",
+            "da pra ver", "dá pra ver", "da pra mostrar",
+            "mostra", "mostre", "verifica", "verifique", "ve ", "vê ",
+            "roda", "rode", "executa", "execute",
+            "como esta", "como está", "como ta", "como tá",
+            "qual ", "quais ", "quem esta", "quem está", "quem ta",
+            "me diz", "me fala", "me mostra",
+        ]
+        
+        wants_execution = any(p in q for p in exec_patterns)
+        
+        # =====================================================
+        # MAPEAMENTO DE PALAVRAS -> COMANDOS
+        # =====================================================
+        keyword_to_cmd = {
+            # Usuarios
+            "logado": "logged_users", "conectado": "logged_users", "usuario": "logged_users",
+            "usuário": "logged_users", "quem esta": "logged_users", "quem está": "logged_users",
+            "who": "logged_users",
+            
+            # Memoria
+            "memoria": "memory_detailed", "memória": "memory_detailed", 
+            "ram": "memory_detailed", "swap": "memory_detailed", "free": "memory_detailed",
+            
+            # Disco
+            "disco": "disk_usage", "espaco": "disk_usage", "espaço": "disk_usage",
+            "particao": "disk_usage", "partição": "disk_usage", "df": "disk_usage",
+            
+            # CPU/Processos
+            "cpu": "cpu_usage", "processador": "cpu_usage",
+            "processo": "processes_top", "processos": "processes_top",
+            "top": "processes_top", "htop": "processes_top",
+            
+            # Rede
+            "rede": "network_info", "ip": "network_info", "network": "network_info",
+            "interface": "network_info", "ifconfig": "network_info",
+            "conexo": "network_connections", "porta": "network_connections",
+            "netstat": "network_connections",
+            
+            # Logs
+            "log": "journalctl", "logs": "journalctl", "journalctl": "journalctl",
+            "erro": "journalctl", "erros": "journalctl",
+            "kernel": "dmesg", "dmesg": "dmesg", "hardware": "dmesg",
+            
+            # Servicos
+            "servico": "systemctl_list", "serviço": "systemctl_list",
+            "servicos": "systemctl_list", "serviços": "systemctl_list",
+            "systemctl": "systemctl_list",
+            "falha": "systemctl_failed", "falhando": "systemctl_failed", "failed": "systemctl_failed",
+            
+            # Sistema
+            "uptime": "uptime", "ligado": "uptime", "tempo ligado": "uptime",
+            "versao": "os_release", "versão": "os_release", "distro": "os_release",
+            
+            # Pacotes
+            "atualizac": "apt_updates", "update": "apt_updates", "upgrade": "apt_updates",
+        }
+        
+        # Encontrar comandos relevantes
+        commands = []
+        for keyword, cmd in keyword_to_cmd.items():
+            if keyword in q and cmd not in commands:
+                commands.append(cmd)
+                logger.info(f"[FALLBACK] Keyword '{keyword}' -> {cmd}")
+        
+        # =====================================================
+        # DETECÇÃO DE TUTORIAL
+        # =====================================================
+        tutorial_patterns = [
+            "como instalar", "como configurar", "como criar", "como fazer",
+            "como remover", "como deletar", "como adicionar",
+            "me ensina", "tutorial", "passo a passo",
+            "o que é", "o que e", "para que serve", "pra que serve",
+            "explica", "explique", "me explica",
+        ]
+        
+        wants_tutorial = any(t in q for t in tutorial_patterns)
+        
+        # =====================================================
+        # DECISÃO DO PLANO
+        # =====================================================
+        
+        # Caso 1: Quer executar algo e encontramos comandos
+        if wants_execution and commands:
+            logger.info(f"[FALLBACK] Execucao detectada: {commands}")
+            return ExecutionPlan(
+                intent="TECHNICAL",
+                use_agent=True,
+                agent_commands=commands[:3],
+                use_rag=False,
+                use_web=False,
+                response_style="ANALYZE",
+                reasoning=f"Fallback: execucao ({', '.join(commands)})"
+            )
+        
+        # Caso 2: Quer tutorial
+        if wants_tutorial:
+            logger.info(f"[FALLBACK] Tutorial detectado")
+            return ExecutionPlan(
+                intent="TECHNICAL",
+                use_agent=False,
+                agent_commands=[],
+                use_rag=True,
+                use_web=False,
+                response_style="TUTORIAL",
+                reasoning="Fallback: tutorial"
+            )
+        
+        # Caso 3: Menciona algo do sistema mas não é claro o que quer
+        if commands:
+            logger.info(f"[FALLBACK] Comandos detectados sem exec explicito: {commands}")
+            return ExecutionPlan(
+                intent="TECHNICAL",
+                use_agent=True,
+                agent_commands=commands[:3],
+                use_rag=True,  # Complementar com documentação
+                use_web=False,
+                response_style="ANALYZE",
+                reasoning=f"Fallback: misto ({', '.join(commands)})"
+            )
+        
+        # Caso 4: Default - só RAG
+        logger.info(f"[FALLBACK] Default: apenas RAG")
+        return ExecutionPlan(
+            intent="TECHNICAL",
+            use_agent=False,
+            agent_commands=[],
+            use_rag=True,
+            use_web=False,
+            response_style="TUTORIAL",
+            reasoning="Fallback: default RAG"
+        )
+    
+    async def execute_plan(self, plan: ExecutionPlan, query: str) -> ExecutionContext:
+        """
+        ETAPA 2: Executa apenas o que o plano pede.
+        """
+        context = ExecutionContext()
+        
+        # Executar agent se necessario
+        if plan.use_agent and plan.agent_commands:
+            logger.info(f"[REACT] Executando agent: {plan.agent_commands}")
+            context.agent_data = await execute_agent_commands(plan.agent_commands)
+            if context.agent_data:
+                context.sources.append("linux-agent")
+        
+        # Buscar RAG se necessario
+        if plan.use_rag:
+            logger.info("[REACT] Buscando no RAG...")
+            rag_data, rag_sim = await search_rag(query)
+            context.rag_data = rag_data
+            context.rag_similarity = rag_sim
+            if rag_data:
+                context.sources.append("knowledge-base")
+        
+        # Buscar web se necessario
+        if plan.use_web:
+            logger.info("[REACT] Buscando na web...")
+            context.web_data = await search_web(query)
+            if context.web_data:
+                context.sources.append("web-search")
+        
+        return context
+    
+    async def evaluate_context(self, query: str, context: ExecutionContext, plan: ExecutionPlan) -> ExecutionContext:
+        """
+        ETAPA 3: Avalia se precisa de mais dados.
+        So executa se coletou dados do agent.
+        """
+        # Se nao coletou dados do agent, nao precisa avaliar
+        if not context.agent_data:
+            return context
+        
+        # Se ja tem RAG ou WEB, nao precisa avaliar
+        if context.rag_data or context.web_data:
+            return context
+        
+        logger.info("[REACT] Avaliando se precisa de mais dados...")
+        
+        try:
+            prompt = build_evaluator_prompt(query, context.agent_data)
+            response = await call_llm_classify(prompt, max_tokens=100)
+            
+            eval_dict = parse_json_response(response)
+            logger.info(f"[REACT] Avaliacao: {eval_dict}")
+            
+            if not eval_dict.get("sufficient", True):
+                # Precisa de mais dados
+                if eval_dict.get("need_rag") and not context.rag_data:
+                    logger.info("[REACT] Avaliador pediu RAG, buscando...")
+                    rag_data, rag_sim = await search_rag(query)
+                    context.rag_data = rag_data
+                    context.rag_similarity = rag_sim
+                    if rag_data:
+                        context.sources.append("knowledge-base")
+                
+                if eval_dict.get("need_web") and not context.web_data:
+                    logger.info("[REACT] Avaliador pediu WEB, buscando...")
+                    context.web_data = await search_web(query)
+                    if context.web_data:
+                        context.sources.append("web-search")
+        
+        except Exception as e:
+            logger.warning(f"[REACT] Erro na avaliacao (ignorando): {e}")
+        
+        return context
+    
+    async def generate_response(self, query: str, context: ExecutionContext, plan: ExecutionPlan) -> str:
+        """
+        ETAPA 4: Gera resposta final.
+        """
+        logger.info(f"[REACT] Gerando resposta (style={plan.response_style})...")
+        
+        # Respostas rapidas para GREETING
+        if plan.intent == "GREETING":
+            greetings = [
+                "Ola! Sou Lanne, sua assistente especialista em Linux e Debian. Como posso ajudar?",
+                "Oi! Estou aqui para ajudar com Linux e Debian. O que voce precisa?",
+                "Ola! Pronto para responder suas perguntas sobre Linux."
+            ]
+            import random
+            return random.choice(greetings)
+        
+        # Gerar resposta com LLM
+        context_text = context.build_context()
+        prompt = build_response_prompt(query, context_text, plan.response_style)
+        
+        try:
+            response = await call_llm(prompt, max_tokens=400, temperature=0.3)
+            return clean_response(response)
+        except Exception as e:
+            logger.error(f"[REACT] Erro ao gerar resposta: {e}")
+            return "Desculpe, tive um problema ao processar sua pergunta. Pode tentar novamente?"
+    
+    async def process(self, query: str) -> ChatResponse:
+        """
+        Pipeline completo ReAct.
+        """
+        # Etapa 1: Criar plano
+        plan = await self.create_plan(query)
+        
+        # Etapa 2: Executar plano
+        context = await self.execute_plan(plan, query)
+        
+        # Etapa 3: Avaliar e complementar se necessario
+        context = await self.evaluate_context(query, context, plan)
         
         # Etapa 4: Gerar resposta
-        logger.info("[PIPELINE] 4/4 - Gerando resposta...")
+        response_text = await self.generate_response(query, context, plan)
         
-        if request_type == "EXECUTE":
-            prompt = build_execution_prompt(query, context, has_agent_data)
-        elif request_type == "TUTORIAL":
-            prompt = build_tutorial_prompt(query, context)
-        else:
-            prompt = build_mixed_prompt(query, context, has_agent_data)
-        
-        logger.info(f"[PIPELINE] Usando prompt tipo: {request_type}")
-        
-        # Parametros otimizados para evitar loops
-        llm_request = LLMRequest(
-            prompt=prompt,
-            max_tokens=400,
-            temperature=0.3,
-            top_p=0.85
-        )
-        
-        async with httpx.AsyncClient(timeout=60.0) as client:
-            response = await client.post(
-                f"{INFERENCE_URL}/internal/generate",
-                json=llm_request.model_dump()
-            )
-            response.raise_for_status()
-            llm_response = response.json()
-        
-        # Limpar resposta
-        generated_text = llm_response["generated_text"].strip()
-        cleaned_text = clean_response(generated_text)
-        
-        # Verificar se resposta ficou muito curta ou vazia
-        if len(cleaned_text) < 20:
-            cleaned_text = "Desculpe, nao consegui gerar uma resposta adequada. Pode reformular sua pergunta?"
-        
-        logger.info("[PIPELINE] Resposta gerada com sucesso")
+        # Validar resposta
+        if len(response_text) < 20:
+            response_text = "Desculpe, nao consegui gerar uma resposta adequada. Pode reformular?"
         
         return ChatResponse(
-            response=cleaned_text,
-            intent="TECHNICAL",
-            sources=sources,
+            response=response_text,
+            intent=plan.intent,
+            sources=context.sources,
             metadata={
-                "rag_similarity": max_similarity,
-                "used_web_fallback": used_web,
-                "used_agent": has_agent_data,
-                "request_type": request_type
+                "plan": plan.to_dict(),
+                "rag_similarity": context.rag_similarity,
+                "used_agent": context.agent_data is not None,
+                "used_rag": context.rag_data is not None,
+                "used_web": context.web_data is not None,
             }
         )
-        
-    except Exception as e:
-        logger.error(f"[PIPELINE] Erro: {e}", exc_info=True)
-        
-        # Fallback com dados do RAG se disponivel
-        try:
-            if 'rag_response' in locals() and rag_response.get("documents"):
-                docs = rag_response["documents"][:2]
-                formatted = "Informacoes encontradas:\n\n"
-                for i, doc in enumerate(docs, 1):
-                    text = doc.get("text", "")[:300]
-                    formatted += f"{i}. {text}...\n\n"
-                
-                return ChatResponse(
-                    response=formatted,
-                    intent="TECHNICAL",
-                    sources=[doc.get("metadata", {}).get("source", "") for doc in docs],
-                    metadata={"error": str(e), "fallback": "rag_only"}
-                )
-        except:
-            pass
-        
-        return ChatResponse(
-            response=f"Erro no pipeline tecnico: {str(e)}",
-            intent="TECHNICAL",
-            sources=[],
-            metadata={"error": str(e)}
-        )
+
+
+# Instancia global do orquestrador
+orchestrator = ReactOrchestrator()
 
 
 # =============================================================================
-# CLASSIFICACAO DE INTENCAO
+# STREAMING
 # =============================================================================
 
-GREETING_RESPONSES = [
-    "Ola! Sou Lanne, sua assistente especialista em Linux e Debian. Como posso ajudar voce hoje?",
-    "Oi! Estou aqui para ajudar com questoes sobre Linux, Debian e tecnologia em geral. Em que posso ser util?",
-    "Ola! Pronto para responder suas perguntas sobre sistemas Linux. O que voce gostaria de saber?"
-]
-
-
-async def classify_intent(query: str) -> IntentClassification:
-    """
-    Classificacao hibrida:
-    1. ML Classifier (treinado) decide primeiro
-    2. LLM valida apenas casos duvidosos
-    """
-    global classifier_pipeline
+async def orchestrate_stream(query_text: str) -> AsyncGenerator[str, None]:
+    """Generator de streaming NDJSON com ReAct."""
     
-    query_lower = query.lower()
-    
-    # =========================================================
-    # REGRA RAPIDA: Saudacoes curtas = GREETING
-    # =========================================================
-    if len(query.split()) <= 4:
-        if any(kw in query_lower for kw in GREETING_KEYWORDS):
-            logger.info(f"[INTENT] '{query}' -> GREETING (quick rule)")
-            return IntentClassification(intent="GREETING", confidence=0.95)
-    
-    # =========================================================
-    # ML CLASSIFIER (modelo treinado)
-    # =========================================================
-    ml_prediction = None
-    ml_confidence = 0.0
-    
-    if classifier_pipeline is not None:
-        try:
-            ml_prediction = classifier_pipeline.predict([query])[0]
-            if hasattr(classifier_pipeline.named_steps['classifier'], 'predict_proba'):
-                probabilities = classifier_pipeline.predict_proba([query])[0]
-                ml_confidence = float(max(probabilities))
-            else:
-                ml_confidence = 0.80
-            
-            logger.info(f"[ML] '{query}' -> {ml_prediction} (conf={ml_confidence:.2f})")
-            
-        except Exception as e:
-            logger.error(f"[ML] Erro: {e}")
-    
-    # =========================================================
-    # DECISAO: ML confiante? Usa direto. Senao, LLM valida.
-    # =========================================================
-    
-    # NOVO: Detectar palavras de execução + comandos Linux
-    execution_words = ["executa", "execute", "roda", "rode", "mostra", "mostre", "pode executar", "consegue executar"]
-    linux_commands = ["who", "free", "df", "top", "htop", "ps", "ifconfig", "netstat", "journalctl", "dmesg", "systemctl"]
-    
-    has_exec_words = any(word in query_lower for word in execution_words)
-    has_linux_cmd = any(cmd in query_lower for cmd in linux_commands)
-    
-    # ML confiante (>= 0.75) MAS check hints primeiro
-    if ml_prediction and ml_confidence >= 0.75:
-        # Se tem execução + comando Linux, força validação do LLM
-        if not (has_exec_words and has_linux_cmd):
-            logger.info(f"[INTENT] '{query}' -> {ml_prediction} (ML confiante)")
-            return IntentClassification(intent=ml_prediction, confidence=ml_confidence)
-        else:
-            logger.info(f"[INTENT] ML confiante MAS query tem execução+comando, validando...")
-    
-    # ML deu CASUAL mas tem palavras tecnicas? LLM valida
-    needs_validation = False
-    technical_hints = [
-        "executa", "execute", "roda", "rode", "mostra", "mostre",
-        "verifica", "analisa", "como ta", "como está",
-        "memoria", "disco", "rede", "cpu", "log", "processo",
-        "servico", "serviço", "uptime", "ip", "porta",
-    ]
-    
-    if ml_prediction == "CASUAL":
-        if any(hint in query_lower for hint in technical_hints):
-            needs_validation = True
-            logger.info(f"[INTENT] ML deu CASUAL mas tem hints tecnicos, validando com LLM...")
-    
-    # ML incerto (< 0.75) = LLM valida
-    if ml_prediction and ml_confidence < 0.75:
-        needs_validation = True
-        logger.info(f"[INTENT] ML incerto ({ml_confidence:.2f}), validando com LLM...")
-    
-    # Sem ML = LLM decide
-    if ml_prediction is None:
-        needs_validation = True
-        logger.info(f"[INTENT] Sem ML, usando LLM...")
-    
-    # =========================================================
-    # LLM VALIDA (so quando necessario)
-    # =========================================================
-    if needs_validation:
-        try:
-            llm_intent = await _llm_classify_intent(query)
-            logger.info(f"[INTENT] '{query}' -> {llm_intent} (LLM validou)")
-            return IntentClassification(intent=llm_intent, confidence=0.85)
-        except Exception as e:
-            logger.error(f"[INTENT] LLM falhou: {type(e).__name__}")
-            # Fallback pro ML se LLM falhar
-            if ml_prediction:
-                logger.info(f"[INTENT] Usando ML como fallback: {ml_prediction}")
-                return IntentClassification(intent=ml_prediction, confidence=ml_confidence)
-    
-    # Se ML teve resultado (mesmo sem validacao), usa ele
-    if ml_prediction:
-        logger.info(f"[INTENT] '{query}' -> {ml_prediction} (ML direto)")
-        return IntentClassification(intent=ml_prediction, confidence=ml_confidence)
-    
-    # =========================================================
-    # FALLBACK: Keywords
-    # =========================================================
-    tech_matches = sum(1 for kw in TECHNICAL_KEYWORDS if kw in query_lower)
-    if tech_matches >= 2:
-        logger.info(f"[INTENT] '{query}' -> TECHNICAL (fallback keywords)")
-        return IntentClassification(intent="TECHNICAL", confidence=0.7)
-    
-    logger.info(f"[INTENT] '{query}' -> CASUAL (fallback)")
-    return IntentClassification(intent="CASUAL", confidence=0.6)
-
-
-async def _llm_classify_intent(query: str) -> str:
-    """Usa LLM para validar/classificar a intencao."""
-    
-    prompt = """<|im_start|>system
-Classifique a intencao do usuario:
-
-TECHNICAL = Usuario quer executar/ver/verificar algo no sistema, ou ajuda tecnica com Linux
-CASUAL = Conversa, agradecimento, feedback, perguntas sobre a IA
-GREETING = Apenas saudacao (oi, ola)
-
-Responda APENAS: TECHNICAL, CASUAL ou GREETING
-<|im_end|>
-<|im_start|>user
-{query}
-<|im_end|>
-<|im_start|>assistant
-""".format(query=query)
+    def mk_event(event_type: str, data: dict) -> str:
+        return json.dumps({"type": event_type, **data}, ensure_ascii=False) + "\n"
     
     try:
-        async with httpx.AsyncClient(timeout=8.0) as client:
-            response = await client.post(
-                f"{INFERENCE_URL}/internal/classify",
-                json={
-                    "prompt": prompt,
-                    "max_tokens": 10,
-                    "temperature": 0.1,
-                    "top_p": 0.9
+        # Etapa 1: Criar plano
+        yield mk_event("status", {"msg": "Analisando sua pergunta..."})
+        await asyncio.sleep(0.01)
+        
+        plan = await orchestrator.create_plan(query_text)
+        
+        yield mk_event("plan", {"data": plan.to_dict()})
+        await asyncio.sleep(0.01)
+        
+        # Resposta rapida para GREETING
+        if plan.intent == "GREETING":
+            response = await orchestrator.generate_response(query_text, ExecutionContext(), plan)
+            yield mk_event("final_response", {
+                "data": {
+                    "response": response,
+                    "intent": "GREETING",
+                    "sources": [],
+                    "metadata": {"plan": plan.to_dict()}
                 }
-            )
+            })
+            return
+        
+        # Resposta para CASUAL (sem recursos)
+        if plan.intent == "CASUAL":
+            yield mk_event("status", {"msg": "Processando..."})
+            await asyncio.sleep(0.01)
             
-            if response.status_code != 200:
-                logger.error(f"[LLM_INTENT] Status {response.status_code}: {response.text[:100]}")
-                raise Exception(f"LLM retornou {response.status_code}")
+            response = await orchestrator.generate_response(query_text, ExecutionContext(), plan)
+            yield mk_event("final_response", {
+                "data": {
+                    "response": response,
+                    "intent": "CASUAL",
+                    "sources": [],
+                    "metadata": {"plan": plan.to_dict()}
+                }
+            })
+            return
+        
+        # TECHNICAL - executar plano
+        context = ExecutionContext()
+        
+        # Agent
+        if plan.use_agent and plan.agent_commands:
+            yield mk_event("status", {"msg": f"Coletando dados: {', '.join(plan.agent_commands)}..."})
+            await asyncio.sleep(0.01)
             
-            result = response.json()
-            text = result.get("generated_text", "").strip().upper()
+            context.agent_data = await execute_agent_commands(plan.agent_commands)
+            if context.agent_data:
+                context.sources.append("linux-agent")
+        
+        # RAG
+        if plan.use_rag:
+            yield mk_event("status", {"msg": "Buscando na base de conhecimento..."})
+            await asyncio.sleep(0.01)
             
-            logger.info(f"[LLM_INTENT] Resposta: '{text}'")
+            rag_data, rag_sim = await search_rag(query_text)
+            context.rag_data = rag_data
+            context.rag_similarity = rag_sim
+            if rag_data:
+                context.sources.append("knowledge-base")
+        
+        # WEB
+        if plan.use_web:
+            yield mk_event("status", {"msg": "Buscando na web..."})
+            await asyncio.sleep(0.01)
             
-            if "TECHNICAL" in text:
-                return "TECHNICAL"
-            elif "GREETING" in text:
-                return "GREETING"
-            else:
-                return "CASUAL"
-                
-    except httpx.TimeoutException:
-        logger.error(f"[LLM_INTENT] Timeout ao classificar")
-        raise
+            context.web_data = await search_web(query_text)
+            if context.web_data:
+                context.sources.append("web-search")
+        
+        # Avaliar se precisa de mais (so se coletou agent e nao tem rag/web)
+        if context.agent_data and not context.rag_data and not context.web_data:
+            yield mk_event("status", {"msg": "Avaliando dados..."})
+            await asyncio.sleep(0.01)
+            
+            context = await orchestrator.evaluate_context(query_text, context, plan)
+        
+        # Gerar resposta
+        yield mk_event("status", {"msg": "Gerando resposta..."})
+        await asyncio.sleep(0.01)
+        
+        response = await orchestrator.generate_response(query_text, context, plan)
+        
+        if len(response) < 20:
+            response = "Desculpe, nao consegui gerar uma resposta adequada. Pode reformular?"
+        
+        yield mk_event("final_response", {
+            "data": {
+                "response": response,
+                "intent": plan.intent,
+                "sources": context.sources,
+                "metadata": {
+                    "plan": plan.to_dict(),
+                    "rag_similarity": context.rag_similarity,
+                    "used_agent": context.agent_data is not None,
+                    "used_rag": context.rag_data is not None,
+                    "used_web": context.web_data is not None,
+                }
+            }
+        })
+        
     except Exception as e:
-        logger.error(f"[LLM_INTENT] Erro: {type(e).__name__}: {e}")
-        raise
-
-
-async def handle_greeting() -> str:
-    """Retorna uma resposta de saudacao pre-definida."""
-    import random
-    return random.choice(GREETING_RESPONSES)
-
-
-async def handle_casual(query: str) -> str:
-    """Gera resposta casual usando o LLM."""
-    try:
-        prompt = f"""<|im_start|>system
-Voce e Lanne, uma assistente amigavel especialista em Linux e Debian.
-Responda de forma casual e amigavel em portugues brasileiro.
-NUNCA use emojis.
-<|im_end|>
-<|im_start|>user
-{query}
-<|im_end|>
-<|im_start|>assistant
-"""
-        
-        llm_request = LLMRequest(
-            prompt=prompt,
-            max_tokens=256,
-            temperature=0.5,
-            top_p=0.9
-        )
-        
-        async with httpx.AsyncClient(timeout=30.0) as client:
-            response = await client.post(
-                f"{INFERENCE_URL}/internal/generate",
-                json=llm_request.model_dump()
-            )
-            
-            if response.status_code != 200:
-                logger.error(f"[CASUAL] LLM retornou {response.status_code}: {response.text[:100]}")
-                return "Desculpe, tive um problema ao processar sua mensagem. Pode tentar novamente?"
-            
-            llm_response = response.json()
-        
-        text = llm_response["generated_text"].strip()
-        return clean_response(text)
-        
-    except httpx.TimeoutException:
-        logger.error(f"[CASUAL] Timeout ao gerar resposta")
-        return "Desculpe, demorei muito para processar. Pode tentar novamente?"
-    except Exception as e:
-        logger.error(f"[CASUAL] Erro: {type(e).__name__}: {e}")
-        return "Desculpe, tive um problema ao processar sua mensagem. Pode tentar novamente?"
+        logger.error(f"[STREAM] Erro: {e}", exc_info=True)
+        yield mk_event("error", {"msg": str(e)})
 
 
 # =============================================================================
@@ -1065,201 +1265,22 @@ async def root():
     return {
         "service": "orchestrator-service",
         "status": "running",
-        "version": "3.0.0",
-        "features": ["qwen2.5_prompts", "no_emojis", "response_cleaning", "llm_agent_routing"]
+        "version": "4.0.0",
+        "architecture": "ReAct",
+        "features": [
+            "llm_planner",
+            "conditional_execution",
+            "context_evaluation",
+            "no_wasted_resources"
+        ]
     }
-
-
-@app.post("/reload-keywords")
-async def reload_keywords():
-    """Recarrega keywords do dataset sem reiniciar o servico"""
-    global TECHNICAL_KEYWORDS, GREETING_KEYWORDS, dataset_rules
-    
-    try:
-        import json
-        with open(DATASET_PATH, 'r', encoding='utf-8') as f:
-            dataset = json.load(f)
-        
-        TECHNICAL_KEYWORDS.clear()
-        GREETING_KEYWORDS.clear()
-        
-        for category, words in dataset['keywords']['TECHNICAL'].items():
-            TECHNICAL_KEYWORDS.extend(words)
-        for category, words in dataset['keywords']['GREETING'].items():
-            GREETING_KEYWORDS.extend(words)
-        
-        dataset_rules = dataset.get('rules', {})
-        
-        logger.info(f"[OK] Keywords recarregadas: {len(TECHNICAL_KEYWORDS)} technical, {len(GREETING_KEYWORDS)} greeting")
-        
-        return {
-            "status": "success",
-            "technical_keywords": len(TECHNICAL_KEYWORDS),
-            "greeting_keywords": len(GREETING_KEYWORDS),
-            "dataset_version": dataset.get('version', 'unknown')
-        }
-    except Exception as e:
-        logger.error(f"[ERRO] Erro ao recarregar keywords: {e}")
-        raise HTTPException(status_code=500, detail=f"Erro ao recarregar: {str(e)}")
-
-
-
-# =============================================================================
-# STREAMING GENERATOR
-# =============================================================================
-
-async def orchestrate_stream(query_text: str) -> AsyncGenerator[str, None]:
-    """Generator de streaming NDJSON"""
-    def mk_event(event_type: str, data: dict) -> str:
-        return json.dumps({"type": event_type, **data}) + "\n"
-    
-    try:
-        yield mk_event("status", {"msg": "Analisando intencao..."})
-        await asyncio.sleep(0.01)
-        
-        classification = await classify_intent(query_text)
-        
-        if classification.intent == "GREETING":
-            response_text = await handle_greeting()
-            yield mk_event("final_response", {
-                "data": {
-                    "response": response_text,
-                    "intent": "GREETING",
-                    "sources": [],
-                    "metadata": {}
-                }
-            })
-            return
-        
-        elif classification.intent == "CASUAL":
-            yield mk_event("status", {"msg": "Processando conversa..."})
-            await asyncio.sleep(0.01)
-            
-            response_text = await handle_casual(query_text)
-            yield mk_event("final_response", {
-                "data": {
-                    "response": response_text,
-                    "intent": "CASUAL",
-                    "sources": [],
-                    "metadata": {}
-                }
-            })
-            return
-        
-        elif classification.intent == "TECHNICAL":
-            # Pipeline TECHNICAL com status detalhado
-            yield mk_event("status", {"msg": "Coletando dados do sistema..."})
-            await asyncio.sleep(0.01)
-            
-            # Executar pipeline inline para dar yield em cada etapa
-            try:
-                request_type = detect_request_type(query_text)
-                
-                # Etapa 1: Agent
-                agent_logs = await collect_agent_logs(query_text)
-                has_agent_data = agent_logs is not None
-                
-                # Etapa 2: RAG
-                yield mk_event("status", {"msg": "Buscando na base de conhecimento..."})
-                await asyncio.sleep(0.01)
-                
-                rag_request = RAGSearchRequest(query=query_text, top_k=3, threshold=0.0)
-                async with httpx.AsyncClient(timeout=10.0) as client:
-                    resp = await client.post(f"{RAG_URL}/internal/search", json=rag_request.model_dump())
-                    resp.raise_for_status()
-                    rag_response = resp.json()
-                
-                max_similarity = rag_response.get("max_similarity", 0.0)
-                documents = rag_response.get("documents", [])
-                
-                context_parts = []
-                sources = []
-                used_web = False
-                
-                if agent_logs:
-                    context_parts.append(agent_logs)
-                    sources.append("linux-agent")
-                
-                if max_similarity >= CONFIDENCE_THRESHOLD:
-                    rag_context = "\n\n".join([doc["text"][:500] for doc in documents])
-                    context_parts.append(f"[BASE DE CONHECIMENTO]\n{rag_context}")
-                    sources.extend([doc.get("metadata", {}).get("source", "internal") for doc in documents])
-                else:
-                    # Etapa 3: Web fallback
-                    yield mk_event("status", {"msg": "Buscando na web..."})
-                    await asyncio.sleep(0.01)
-                    
-                    web_query = f"Linux Debian {query_text}"
-                    web_request = WebSearchRequest(query=web_query, max_results=3)
-                    
-                    async with httpx.AsyncClient(timeout=15.0) as client:
-                        resp = await client.post(f"{WEB_SEARCH_URL}/internal/web_search", json=web_request.model_dump())
-                        resp.raise_for_status()
-                        web_response = resp.json()
-                    
-                    web_results = web_response.get("results", [])
-                    if web_results:
-                        web_context = "\n\n".join([
-                            f"- {r.get('title', 'Sem titulo')}\n{r.get('snippet', '')[:300]}"
-                            for r in web_results
-                        ])
-                        context_parts.append(f"[PESQUISA WEB]\n{web_context}")
-                        sources.extend([r.get("url", "") for r in web_results])
-                        used_web = True
-                
-                context = "\n\n".join(context_parts)
-                
-                # Etapa 4: LLM
-                yield mk_event("status", {"msg": "Gerando resposta..."})
-                await asyncio.sleep(0.01)
-                
-                if request_type == "EXECUTE":
-                    prompt = build_execution_prompt(query_text, context, has_agent_data)
-                elif request_type == "TUTORIAL":
-                    prompt = build_tutorial_prompt(query_text, context)
-                else:
-                    prompt = build_mixed_prompt(query_text, context, has_agent_data)
-                
-                llm_request = LLMRequest(prompt=prompt, max_tokens=400, temperature=0.3, top_p=0.85)
-                
-                async with httpx.AsyncClient(timeout=60.0) as client:
-                    resp = await client.post(f"{INFERENCE_URL}/internal/generate", json=llm_request.model_dump())
-                    resp.raise_for_status()
-                    llm_response = resp.json()
-                
-                generated_text = llm_response["generated_text"].strip()
-                cleaned_text = clean_response(generated_text)
-                
-                if len(cleaned_text) < 20:
-                    cleaned_text = "Desculpe, nao consegui gerar uma resposta adequada. Pode reformular sua pergunta?"
-                
-                yield mk_event("final_response", {
-                    "data": {
-                        "response": cleaned_text,
-                        "intent": "TECHNICAL",
-                        "sources": sources,
-                        "metadata": {
-                            "rag_similarity": max_similarity,
-                            "used_web_fallback": used_web,
-                            "used_agent": has_agent_data,
-                            "request_type": request_type
-                        }
-                    }
-                })
-                
-            except Exception as e:
-                logger.error(f"[STREAM_TECHNICAL] Erro: {e}")
-                yield mk_event("error", {"msg": str(e)})
-        
-    except Exception as e:
-        logger.error(f"[STREAM] Erro: {e}")
-        yield mk_event("error", {"msg": str(e)})
 
 
 @app.post("/internal/orchestrate")
 async def orchestrate(query: ChatQuery):
     """
     Endpoint principal de orquestracao (STREAMING NDJSON)
+    Usa arquitetura ReAct para decisoes inteligentes.
     """
     logger.info(f"[ORCH] Query: {query.text[:50]}...")
     return StreamingResponse(
@@ -1268,24 +1289,19 @@ async def orchestrate(query: ChatQuery):
     )
 
 
+@app.post("/internal/orchestrate-sync")
+async def orchestrate_sync(query: ChatQuery):
+    """
+    Endpoint sincrono (sem streaming) para testes.
+    """
+    logger.info(f"[ORCH_SYNC] Query: {query.text[:50]}...")
+    result = await orchestrator.process(query.text)
+    return result
+
+
 @app.post("/internal/configure-agent")
 async def configure_agent(config: dict):
-    """
-    Endpoint para configurar AGENT_URL dinamicamente
-    
-    Request:
-        {
-            "agent_url": "http://172.17.1.1:9000",
-            "enabled": true
-        }
-    
-    Response:
-        {
-            "status": "ok",
-            "agent_url": "http://172.17.1.1:9000",
-            "enabled": true
-        }
-    """
+    """Configura URL do agent dinamicamente."""
     try:
         global AGENT_CONFIG
         
@@ -1293,16 +1309,12 @@ async def configure_agent(config: dict):
         enabled = config.get("enabled", True)
         
         if not agent_url:
-            raise HTTPException(
-                status_code=400,
-                detail="Campo 'agent_url' e obrigatorio"
-            )
+            raise HTTPException(status_code=400, detail="Campo 'agent_url' e obrigatorio")
         
-        # Atualizar configuração global
         AGENT_CONFIG["url"] = agent_url
         AGENT_CONFIG["enabled"] = enabled
         
-        logger.info(f"[CONFIG] Agent URL atualizado: {agent_url} (enabled={enabled})")
+        logger.info(f"[CONFIG] Agent: {agent_url} (enabled={enabled})")
         
         return {
             "status": "ok",
@@ -1313,11 +1325,18 @@ async def configure_agent(config: dict):
     except HTTPException:
         raise
     except Exception as e:
-        logger.error(f"[CONFIG] Erro ao configurar agent: {e}")
-        raise HTTPException(
-            status_code=500,
-            detail=f"Erro ao configurar agent: {str(e)}"
-        )
+        logger.error(f"[CONFIG] Erro: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/debug/plan")
+async def debug_plan(query: str):
+    """
+    Endpoint de debug - mostra o plano sem executar.
+    Util para testar o planner.
+    """
+    plan = await orchestrator.create_plan(query)
+    return plan.to_dict()
 
 
 if __name__ == "__main__":
