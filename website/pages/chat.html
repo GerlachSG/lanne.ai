@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chatbox IA Assistente</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Ubuntu:ital,wght@0,300;0,400;0,500;0,700;1,300;1,400;1,500;1,700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0&icon_names=content_copy" />
+    <link rel="stylesheet" href="../css/chat.css">
+</head>
+<body>
+
+    <div class="container">
+
+        <img src="../imagens/lanne-logo.svg" alt="Logo" class="logo">
+
+        <!-- Barra lateral -->
+        <div class="sidebar">
+            <button class="sidebar-button bars">
+                <i class="fas fa-bars"></i>
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M3 18V16H21V18H3ZM3 13V11H21V13H3ZM3 8V6H21V8H3Z" class="icon-path"/>
+                </svg>
+            </button>
+            <button class="sidebar-button plus">
+                <i class="fas fa-add-chat"></i> <img src="../imagens/plus-icon.svg">
+            </button>
+            <button class="sidebar-button home">
+                <i class="fas fa-home"></i>
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M6 19H9V13H15V19H18V10L12 5.5L6 10V19ZM4 21V9L12 3L20 9V21H13V15H11V21H4Z" class="icon-path"/>
+                </svg>
+            </button>            
+            <button class="sidebar-button user">
+                <div class="image-container">
+                    <img id="userProfilePicture" alt="User Profile Picture" style="width: 40px; height: 40px; border-radius: 50%;">
+                    <div class="overlay"></div>
+                </div>
+            </button>            
+            <button id="toggle-theme-button" class="sidebar-button theme">
+                <img id="theme-icon" src="../imagens/dark-theme-icon.svg" alt="Tema">
+            </button>
+            
+            </button>
+            <button class="sidebar-button logout">
+                <i class="fas fa-sign-out-alt"></i>
+                <svg width="38" height="38" viewBox="0 0 38 38" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M12 28C11.45 28 10.9792 27.8042 10.5875 27.4125C10.1958 27.0208 10 26.55 10 26V12C10 11.45 10.1958 10.9792 10.5875 10.5875C10.9792 10.1958 11.45 10 12 10H19V12H12V26H19V28H12ZM23 24L21.625 22.55L24.175 20H16V18H24.175L21.625 15.45L23 14L28 19L23 24Z" class="icon-path" fill="#E8EAED"/>
+                </svg>
+            </button>
+            
+        </div>
+        
+        
+        <!-- Histórico chats -->
+        <main class="chat-area">
+            <header class="chat-header">
+                <p1>Chats</p1>
+                <div class="search-bar">
+                    <input type="text" placeholder="Procurar" />
+                    <button>
+                        <i class="fas fa-filter"></i>
+                        <svg width="26" height="25" viewBox="0 0 26 25" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M11.8113 21.2359V15.1793H13.8302V17.1982H21.9057V19.2171H13.8302V21.2359H11.8113ZM3.73584 19.2171V17.1982H9.79245V19.2171H3.73584ZM7.77358 15.1793V13.1604H3.73584V11.1416H7.77358V9.12271H9.79245V15.1793H7.77358ZM11.8113 13.1604V11.1416H21.9057V13.1604H11.8113ZM15.8491 9.12271V3.0661H17.8679V5.08497H21.9057V7.10384H17.8679V9.12271H15.8491ZM3.73584 7.10384V5.08497H13.8302V7.10384H3.73584Z" class="icon-path" fill-opacity="0.75"/>
+                        </svg>
+                    </button>                                      
+                </div>
+            </header> 
+
+            
+            <section class="chat-list">
+                <!-- Exemplo de item de chat -->
+                <div class="chat-item blue">
+                    <img src="../imagens/kali.svg" alt="Kali Linux Icon" style="position: absolute; top: 10px; left: -27px;">
+                    <h2>Problema de Conexão a Internet</h2>
+                    <p>Problemas ao conectar o Kali Linux 2024.1 a redes Wi-Fi após uma atualização recente. A interface de rede não é detectada, e a solução de problemas automática não resolve o problema.</p>
+                    <span class="date">1d</span>
+                </div>
+                <div class="chat-item red">
+                    <img src="../imagens/redhat.svg" alt="Red Hat Icon" style="position: absolute; top: 10px; left: -25px;">
+                    <h2>Erro ao Iniciar Serviço Apache</h2>
+                    <p>Após atualização no Red Hat Enterprise Linux 9, o serviço Apache não inicia. Mensagem de erro aponta falha na configuração do virtual host.</p>
+                    <span class="date">1d</span>
+                </div>
+                <div class="chat-item orange">
+                    <img src="../imagens/ubuntu.svg" alt="Ubuntu Icon" style="position: absolute; top: 10px; left: -24px;">
+                    <h2>Problema com Drivers de Vídeo</h2>
+                    <p>Após instalar o Ubuntu 24.04 LTS, os drivers de vídeo não são reconhecidos corretamente, causando baixa resolução e lentidão no desempenho gráfico.</p>
+                    <span class="date">3d</span>
+                </div>
+                <div class="chat-item green">
+                    <img src="../imagens/susy.svg" alt="Susy Icon" style="position: absolute; top: 8px; left: -27px;">
+                    <h2>Falha na Instalação de Pacotes</h2>
+                    <p>Durante a instalação do openSUSE Leap 15.5, a ferramenta de gerenciamento de pacotes falha ao resolver dependências de bibliotecas críticas, interrompendo o processo.</p>
+                    <span class="date">4d</span>
+                </div>
+                <div class="chat-item orange">
+                    <img src="../imagens/ubuntu.svg" alt="Ubuntu Icon" style="position: absolute; top: 10px; left: -24px;">
+                    <h2>Instalação de Aplicações Snap</h2>
+                    <p>Após a instalação do Ubuntu 24.04 LTS, há relatos de travamentos frequentes ao tentar instalar ou atualizar pacotes Snap, afetando a usabilidade do sistema.</p>
+                    <span class="date">4d</span>
+                </div>
+                <div class="chat-item green">
+                    <img src="../imagens/susy.svg" alt="Susy Icon" style="position: absolute; top: 8px; left: -27px;">
+                    <h2>Reconhecimento de Dispositivos USB</h2>
+                    <p>O openSUSE Leap 15.5 apresenta problemas no reconhecimento de dispositivos USB conectados após inicialização. Alguns drivers não carregam corretamente.</p>
+                    <span class="date">8d</span>
+                </div>
+                <div class="chat-item green">
+                    <img src="../imagens/susy.svg" alt="Susy Icon" style="position: absolute; top: 8px; left: -27px;">
+                    <h2>Erro ao Montar Partições NTFS</h2>
+                    <p>No openSUSE Leap 15.5, ocorre falha ao tentar montar partições NTFS de discos externos. A mensagem de erro sugere problemas com permissões ou falta de suporte de drivers.</p>
+                    <span class="date">12d</span>
+                </div>
+            </section>
+        </main>
+        
+        <!-- Área da conversa IA -->
+        <div class="chatbot-popup">
+            <div class="chat-body">
+                <div class="message bot-message">
+                    <div class="message-text">Olá! Como posso te ajudar hoje?</div>
+                </div>
+            </div>
+            <div class="chat-footer">
+                <form action="#" class="chat-form">
+                    <textarea placeholder="Mensagem..."
+                     class="message-input" required></textarea>
+                    <div class="chat-controls">
+                        <button type="submit" id="send-message" class="enviar">
+                            <svg width="32" height="28" viewBox="0 0 32 28" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M9.3287 23.609L9.19849 5.85205L29.4457 14.5826L9.3287 23.609ZM11.4287 20.264L23.9753 14.6227L11.3473 9.16591L11.3758 13.0503L17.7613 14.6682L11.4002 16.3797L11.4287 20.264Z" class="icon-path"/>
+                            </svg>
+                        </button>
+                                               
+                    </div>
+                    
+                </form>
+                
+            </div>
+    </div>
+</div>
+
+    <script src="../scripts/serviceChecker.js"></script>
+    <script src="../scripts/login.js"></script>
+    <script src="../scripts/conversationService.js"></script>
+    <script src="../scripts/chatIntegration.js"></script>
+
+    <script>
+        // LOGOUT DA PÁGINA
+        document.addEventListener('DOMContentLoaded', () => {
+            const logoutButton = document.querySelector('.sidebar-button.logout');
+            const homeButton = document.querySelector('.sidebar-button.home');
+            
+            if (logoutButton) {
+                logoutButton.addEventListener('click', async function() {
+                    await authService.logout();
+                    window.location.href = "index.html";
+                });
+            }
+
+            if (homeButton) {
+                homeButton.addEventListener('click', function() {
+                    window.location.href = "index.html";
+                });
+            }
+        });
+    </script>
+      
+    
+</body>
+</html>

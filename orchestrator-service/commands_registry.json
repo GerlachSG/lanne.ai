@@ -1,0 +1,177 @@
+{
+    "meta": {
+        "version": "1.0",
+        "description": "Registro Oficial de Capacidades do Sistema Lanne AI",
+        "total_commands": 46
+    },
+    "commands": {
+        "journalctl": {
+            "description": "Lê logs do systemd (erros gerais e eventos recentes do sistema)",
+            "category": "logs"
+        },
+        "syslog": {
+            "description": "Lê as últimas linhas do arquivo tradicional /var/log/syslog",
+            "category": "logs"
+        },
+        "dmesg": {
+            "description": "Exibe mensagens do buffer do kernel (hardware, drivers, erros de GPU)",
+            "category": "logs"
+        },
+        "boot_log": {
+            "description": "Exibe logs especificamente da última inicialização (boot)",
+            "category": "logs"
+        },
+        "systemctl_status": {
+            "description": "Verifica o status detalhado de serviços systemd",
+            "category": "services"
+        },
+        "systemctl_failed": {
+            "description": "Lista apenas os serviços que falharam ao iniciar",
+            "category": "services"
+        },
+        "systemctl_list": {
+            "description": "Lista todos os serviços ativos no sistema",
+            "category": "services"
+        },
+        "disk_usage": {
+            "description": "Mostra o uso de espaço em disco e partições (df -h)",
+            "category": "storage"
+        },
+        "disk_usage_inodes": {
+            "description": "Mostra o uso de inodes no disco (importante para muitos arquivos pequenos)",
+            "category": "storage"
+        },
+        "disk_io": {
+            "description": "Exibe estatísticas de I/O de disco (leitura/escrita em tempo real)",
+            "category": "storage"
+        },
+        "memory_usage": {
+            "description": "Mostra uso de memória RAM e Swap de forma resumida",
+            "category": "hardware"
+        },
+        "memory_detailed": {
+            "description": "Lê /proc/meminfo para detalhes profundos sobre a memória",
+            "category": "hardware"
+        },
+        "cpu_info": {
+            "description": "Exibe informações da arquitetura da CPU",
+            "category": "hardware"
+        },
+        "cpu_usage": {
+            "description": "Lista os processos que mais estão consumindo CPU no momento",
+            "category": "hardware"
+        },
+        "load_average": {
+            "description": "Exibe a média de carga do sistema (1, 5 e 15 minutos)",
+            "category": "hardware"
+        },
+        "network_info": {
+            "description": "Exibe endereços IP, MAC e status das interfaces de rede",
+            "category": "network"
+        },
+        "network_routes": {
+            "description": "Exibe a tabela de rotas de rede e gateways",
+            "category": "network"
+        },
+        "network_stats": {
+            "description": "Exibe estatísticas de sockets e tráfego de rede",
+            "category": "network"
+        },
+        "network_connections": {
+            "description": "Lista conexões de rede ativas e portas ouvindo (listen)",
+            "category": "network"
+        },
+        "ping_test": {
+            "description": "Realiza teste de conectividade (ping) para verificar internet",
+            "category": "network"
+        },
+        "processes_top": {
+            "description": "Lista processos ordenados por consumo de memória",
+            "category": "processes"
+        },
+        "processes_tree": {
+            "description": "Exibe a árvore hierárquica de processos (quem iniciou quem)",
+            "category": "processes"
+        },
+        "processes_count": {
+            "description": "Conta o número total de processos ativos",
+            "category": "processes"
+        },
+        "mount_points": {
+            "description": "Lista todos os pontos de montagem do sistema",
+            "category": "filesystem"
+        },
+        "block_devices": {
+            "description": "Lista dispositivos de bloco e estrutura de partições (lsblk)",
+            "category": "filesystem"
+        },
+        "file_systems": {
+            "description": "Lista sistemas de arquivos suportados pelo kernel atual",
+            "category": "filesystem"
+        },
+        "logged_users": {
+            "description": "Mostra quem está logado no sistema agora",
+            "category": "users"
+        },
+        "last_logins": {
+            "description": "Exibe histórico dos últimos logins bem sucedidos",
+            "category": "users"
+        },
+        "failed_logins": {
+            "description": "Exibe histórico de tentativas de login que falharam",
+            "category": "users"
+        },
+        "users_list": {
+            "description": "Lista todos os usuários cadastrados no /etc/passwd",
+            "category": "users"
+        },
+        "kernel_version": {
+            "description": "Mostra a versão exata do Kernel Linux",
+            "category": "system"
+        },
+        "kernel_modules": {
+            "description": "Lista os módulos do kernel carregados atualmente",
+            "category": "system"
+        },
+        "apt_updates": {
+            "description": "Verifica se há atualizações de pacotes disponíveis (APT)",
+            "category": "packages"
+        },
+        "dpkg_list": {
+            "description": "Lista todos os pacotes instalados via dpkg",
+            "category": "packages"
+        },
+        "apt_history": {
+            "description": "Lê o histórico recente de instalações e remoções do APT",
+            "category": "packages"
+        },
+        "uptime": {
+            "description": "Mostra há quanto tempo o sistema está ligado",
+            "category": "system"
+        },
+        "date": {
+            "description": "Mostra a data e hora atual do servidor",
+            "category": "system"
+        },
+        "timezone": {
+            "description": "Mostra configurações de fuso horário e sincronização NTP",
+            "category": "system"
+        },
+        "environment": {
+            "description": "Exibe as variáveis de ambiente do sistema",
+            "category": "system"
+        },
+        "hostname": {
+            "description": "Exibe o nome de host da máquina",
+            "category": "system"
+        },
+        "os_release": {
+            "description": "Exibe detalhes da distribuição Linux (/etc/os-release)",
+            "category": "system"
+        },
+        "debian_version": {
+            "description": "Exibe a versão específica do Debian (/etc/debian_version)",
+            "category": "system"
+        }
+    }
+}

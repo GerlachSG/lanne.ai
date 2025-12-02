@@ -1,0 +1,11 @@
+Metadata-Version: 2.4
+Name: lanne-schemas
+Version: 0.1.0
+Summary: Shared Pydantic models for Lanne AI microservices
+Author: Lanne AI Team
+Requires-Python: >=3.9
+Requires-Dist: pydantic>=2.0.0
+Dynamic: author
+Dynamic: requires-dist
+Dynamic: requires-python
+Dynamic: summary

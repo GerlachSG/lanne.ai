@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chatbox IA Assistente</title>
+    
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Ubuntu:ital,wght@0,300;0,400;0,500;0,700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../css/logged.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Barra lateral -->
+        <div class="sidebar">
+            <button class="sidebar-button bars">
+                <i class="fas fa-bars"></i> <img src="../imagens/menu-icon.svg">
+            </button>
+            <button class="sidebar-button plus">
+                <i class="fas fa-add-chat"></i> <img src="../imagens/plus-icon.svg">
+            </button>
+            <button class="sidebar-button home">
+                <i class="fas fa-home"></i> <img src="../imagens/home-icon.svg">
+            </button>
+            <button class="sidebar-button user">
+                <i class="fas fa-user"></i> <img src="../imagens/perfil-icon.svg">
+            </button>
+            <button class="sidebar-button logout">
+                <i class="fas fa-sign-out-alt"></i> <img src="../imagens/logout-icon.svg">
+            </button>
+        </div>
+        
+        
+        <!-- Área de chat -->
+        <main class="chat-area">
+            <header class="chat-header">
+                <p1>Chats</p1>
+                <div class="search-bar">
+                    <input type="text" placeholder="Procurar" />
+                    <button><i class="fas fa-filter"></i></button>
+                </div>
+            </header>
+            
+            <section class="chat-list">
+                <!-- Exemplo de item de chat -->
+                <div class="chat-item blue">
+                    <h2>Problema de Conexão a Internet</h2>
+                    <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nulla hendrerit vitae tortor eu scelerisque. Nam enim massa, eleifend vitae pellentesque vitae, aliquet in orci.</p>
+                    <span class="date">00d</span>
+                </div>
+            </section>
+        </main>
+        
+        <!-- Área de mensagens -->
+        <div class="message-area">
+            <div class="message-container">
+                <div class="message incoming">Mensagem recebida...</div>
+                <div class="message outgoing">Sua mensagem...</div>
+            </div>
+            <div class="message-input">
+                <input type="text" placeholder="Enviar mensagem">
+                <button><i class="fas fa-paper-plane"></i></button>
+            </div>
+        </div>
+    </div>
+    <script src="../scripts/script.js"></script>
+</body>
+<script>
+    document.querySelector('.message-input button').addEventListener('click', () => {
+    const messageText = document.querySelector('.message-input input').value;
+    if (messageText) {
+        const newMessage = document.createElement('div');
+        newMessage.classList.add('message', 'outgoing');
+        newMessage.innerText = messageText;
+        document.querySelector('.message-container').appendChild(newMessage);
+        document.querySelector('.message-input input').value = '';
+    }
+});
+
+</script>
+</html>

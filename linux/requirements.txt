@@ -1,0 +1,6 @@
+textual
+rich
+httpx
+pydantic
+fastapi
+uvicorn
