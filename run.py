@@ -145,37 +145,62 @@ def install_dependencies():
         return False
 
 def start_backend():
-    """Inicia o start_all.py em processo separado"""
-    print_header("Iniciando Serviços Backend")
+    """Inicia cada serviço em janela separada"""
+    print_header("Iniciando Servicos Backend")
     
-    start_all_path = Path(__file__).parent / "start_all.py"
+    base_path = Path(__file__).parent
     
-    if not start_all_path.exists():
-        print_error(f"start_all.py não encontrado em {start_all_path}")
+    # Lista de servicos com seus caminhos e portas
+    services = [
+        ("Gateway", "gateway-service/main.py", 8000),
+        ("Orchestrator", "orchestrator-service/main.py", 8001),
+        ("Inference", "inference-service/main.py", 8002),
+        ("RAG", "rag-service/main.py", 8003),
+        ("Web Search", "web-search-service/main.py", 8004),
+        ("Metrics", "metrics-service/main.py", 8005),
+        ("Conversation", "conversation-service/main.py", 8006),
+        ("Auth", "auth-service/main.py", 8007),
+    ]
+    
+    processes = []
+    
+    for name, path, port in services:
+        service_path = base_path / path
+        
+        if not service_path.exists():
+            print_warning(f"{name} nao encontrado em {service_path}")
+            continue
+        
+        print_info(f"Iniciando {name} na porta {port}...")
+        
+        try:
+            if platform.system() == "Windows":
+                # Cada servico em janela CMD separada com titulo
+                process = subprocess.Popen(
+                    f'start "{name} - Porta {port}" cmd /k {sys.executable} "{service_path}"',
+                    shell=True,
+                    cwd=str(base_path)
+                )
+            else:
+                # Linux/Mac - usar gnome-terminal ou xterm se disponivel
+                process = subprocess.Popen(
+                    [sys.executable, str(service_path)],
+                    cwd=str(base_path)
+                )
+            
+            processes.append(process)
+            print_success(f"{name} iniciado na porta {port}")
+            time.sleep(0.5)  # Pequeno delay entre cada servico
+            
+        except Exception as e:
+            print_error(f"Erro ao iniciar {name}: {e}")
+    
+    if not processes:
+        print_error("Nenhum servico foi iniciado")
         return None
     
-    print_info("Iniciando serviços backend...")
-    print_warning("Uma nova janela será aberta com os logs dos serviços")
-    
-    try:
-        # Windows
-        if platform.system() == "Windows":
-            process = subprocess.Popen(
-                ["start", "cmd", "/k", sys.executable, str(start_all_path)],
-                shell=True
-            )
-        # Linux/Mac
-        else:
-            process = subprocess.Popen(
-                [sys.executable, str(start_all_path)]
-            )
-        
-        print_success("Backend iniciado!")
-        return process
-        
-    except Exception as e:
-        print_error(f"Erro ao iniciar backend: {e}")
-        return None
+    print_success(f"{len(processes)} servicos iniciados!")
+    return processes
 
 def wait_for_services(timeout=30):
     """Aguarda serviços ficarem disponíveis"""
@@ -219,7 +244,7 @@ def wait_for_services(timeout=30):
     return False
 
 def start_web_server():
-    """Inicia servidor HTTP para o website"""
+    """Inicia servidor HTTP para o website com CORS e no-cache"""
     print_header("Iniciando Servidor Web")
     
     website_path = Path(__file__).parent / "website"
@@ -230,17 +255,56 @@ def start_web_server():
     
     print_info("Iniciando servidor HTTP na porta 3000...")
     
+    # Criar um script temporário para servidor com headers corretos
+    server_script = Path(__file__).parent / "_temp_server.py"
+    server_code = '''
+import http.server
+import socketserver
+import os
+import sys
+
+PORT = 3000
+DIRECTORY = sys.argv[1] if len(sys.argv) > 1 else "."
+
+class NoCacheHandler(http.server.SimpleHTTPRequestHandler):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, directory=DIRECTORY, **kwargs)
+    
+    def end_headers(self):
+        # Headers para evitar cache
+        self.send_header("Cache-Control", "no-cache, no-store, must-revalidate")
+        self.send_header("Pragma", "no-cache")
+        self.send_header("Expires", "0")
+        # CORS headers
+        self.send_header("Access-Control-Allow-Origin", "*")
+        self.send_header("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
+        self.send_header("Access-Control-Allow-Headers", "Content-Type")
+        super().end_headers()
+    
+    def do_OPTIONS(self):
+        self.send_response(200)
+        self.end_headers()
+
+with socketserver.TCPServer(("", PORT), NoCacheHandler) as httpd:
+    print(f"Servidor rodando em http://localhost:{PORT}")
+    httpd.serve_forever()
+'''
+    
     try:
+        # Escrever script temporário
+        with open(server_script, 'w', encoding='utf-8') as f:
+            f.write(server_code)
+        
         # Windows
         if platform.system() == "Windows":
             process = subprocess.Popen(
-                ["start", "cmd", "/k", sys.executable, "-m", "http.server", "3000", "--directory", str(website_path)],
+                ["start", "cmd", "/k", sys.executable, str(server_script), str(website_path)],
                 shell=True
             )
         # Linux/Mac
         else:
             process = subprocess.Popen(
-                [sys.executable, "-m", "http.server", "3000", "--directory", str(website_path)]
+                [sys.executable, str(server_script), str(website_path)]
             )
         
         time.sleep(2)  # Aguardar servidor iniciar
@@ -299,8 +363,8 @@ def main():
         print_success("Todas as dependências estão instaladas!")
     
     # Iniciar backend
-    backend_process = start_backend()
-    if not backend_process:
+    backend_processes = start_backend()
+    if not backend_processes:
         print_error("Falha ao iniciar backend")
         input("\nPressione Enter para sair...")
         sys.exit(1)
@@ -331,18 +395,27 @@ def main():
     except KeyboardInterrupt:
         print("\n")
     
-    print_info("Encerrando serviços...")
+    print_info("Encerrando servicos...")
     
-    # Tentar encerrar processos gracefully
-    if backend_process:
-        try:
-            backend_process.terminate()
-        except:
-            pass
+    # Tentar encerrar processos do backend
+    if backend_processes:
+        for proc in backend_processes:
+            try:
+                proc.terminate()
+            except:
+                pass
     
     if web_process:
         try:
             web_process.terminate()
+        except:
+            pass
+    
+    # Limpar arquivo temporário do servidor
+    temp_server = Path(__file__).parent / "_temp_server.py"
+    if temp_server.exists():
+        try:
+            temp_server.unlink()
         except:
             pass
     

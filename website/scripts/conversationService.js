@@ -1,10 +1,11 @@
 /**
  * Conversation Service - Gerenciamento de conversas e histórico
  * Integra com conversation-service backend
+ * Usa IPs dinâmicos configurados no login
  */
 
-const CONVERSATION_API_URL = 'http://localhost:8006'; // conversation-service
-const GATEWAY_API_URL = 'http://localhost:8000'; // gateway-service
+// Funções para obter URLs dinâmicas (definidas em login.js)
+// getConversationUrl() e getGatewayUrl()
 
 class ConversationService {
     constructor() {
@@ -19,7 +20,7 @@ class ConversationService {
      */
     async loadUserConversations(userId) {
         try {
-            const response = await fetch(`${CONVERSATION_API_URL}/conversations?user_id=${userId}`);
+            const response = await fetch(`${getConversationUrl()}/conversations?user_id=${userId}`);
             
             if (!response.ok) {
                 throw new Error('Erro ao carregar conversas');
@@ -42,7 +43,7 @@ class ConversationService {
      */
     async createConversation(userId, title = 'Nova Conversa') {
         try {
-            const response = await fetch(`${CONVERSATION_API_URL}/conversations`, {
+            const response = await fetch(`${getConversationUrl()}/conversations`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -79,7 +80,7 @@ class ConversationService {
      */
     async loadMessages(conversationId) {
         try {
-            const response = await fetch(`${CONVERSATION_API_URL}/conversations/${conversationId}/messages`);
+            const response = await fetch(`${getConversationUrl()}/conversations/${conversationId}/messages`);
             
             if (!response.ok) {
                 throw new Error('Erro ao carregar mensagens');
@@ -102,7 +103,7 @@ class ConversationService {
      */
     async addMessage(conversationId, role, content) {
         try {
-            const response = await fetch(`${CONVERSATION_API_URL}/conversations/${conversationId}/messages`, {
+            const response = await fetch(`${getConversationUrl()}/conversations/${conversationId}/messages`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -142,7 +143,7 @@ class ConversationService {
             await this.addMessage(this.currentConversationId, 'user', userMessage);
 
             // Enviar para o gateway
-            const response = await fetch(`${GATEWAY_API_URL}/api/v1/chat`, {
+            const response = await fetch(`${getGatewayUrl()}/api/v1/chat`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -178,7 +179,7 @@ class ConversationService {
      */
     async deleteConversation(conversationId) {
         try {
-            const response = await fetch(`${CONVERSATION_API_URL}/conversations/${conversationId}`, {
+            const response = await fetch(`${getConversationUrl()}/conversations/${conversationId}`, {
                 method: 'DELETE'
             });
 
@@ -220,7 +221,7 @@ class ConversationService {
      */
     async generateTitle(conversationId) {
         try {
-            const response = await fetch(`${CONVERSATION_API_URL}/conversations/${conversationId}/generate-title`, {
+            const response = await fetch(`${getConversationUrl()}/conversations/${conversationId}/generate-title`, {
                 method: 'POST'
             });
 

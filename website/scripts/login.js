@@ -3,7 +3,49 @@
  * Substitui Firebase por auth-service local
  */
 
-const API_BASE_URL = 'http://localhost:8007'; // auth-service
+// Configurações de IP (podem ser alteradas no login)
+let SERVER_IP = localStorage.getItem('lanne_server_ip') || 'localhost';
+let AGENT_IP = localStorage.getItem('lanne_agent_ip') || 'localhost';
+
+// URLs dos serviços (atualizadas dinamicamente)
+function getAuthUrl() {
+    return `http://${SERVER_IP}:8007`;
+}
+
+function getGatewayUrl() {
+    return `http://${SERVER_IP}:8000`;
+}
+
+function getConversationUrl() {
+    return `http://${SERVER_IP}:8006`;
+}
+
+function getOrchestratorUrl() {
+    return `http://${SERVER_IP}:8001`;
+}
+
+function getAgentUrl() {
+    return `http://${AGENT_IP}:9000`;
+}
+
+// Função para atualizar IPs
+function setServerIP(ip) {
+    SERVER_IP = ip || 'localhost';
+    localStorage.setItem('lanne_server_ip', SERVER_IP);
+}
+
+function setAgentIP(ip) {
+    AGENT_IP = ip || 'localhost';
+    localStorage.setItem('lanne_agent_ip', AGENT_IP);
+}
+
+function getServerIP() {
+    return SERVER_IP;
+}
+
+function getAgentIP() {
+    return AGENT_IP;
+}
 
 class AuthService {
     constructor() {
@@ -51,6 +93,7 @@ class AuthService {
      * @returns {Promise<Object>} Dados do usuário
      */
     async login(username) {
+        const API_BASE_URL = getAuthUrl();
         try {
             // Primeiro, tenta fazer login
             let response = await fetch(`${API_BASE_URL}/login`, {
@@ -103,6 +146,7 @@ class AuthService {
      * Logout do usuário
      */
     async logout() {
+        const API_BASE_URL = getAuthUrl();
         try {
             if (this.token) {
                 await fetch(`${API_BASE_URL}/logout`, {
@@ -126,6 +170,7 @@ class AuthService {
      */
     async validateToken() {
         if (!this.token) return false;
+        const API_BASE_URL = getAuthUrl();
 
         try {
             const response = await fetch(`${API_BASE_URL}/validate`, {

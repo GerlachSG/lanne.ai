@@ -237,21 +237,39 @@ def build_planner_prompt(query: str) -> str:
     prompt = f"""<|im_start|>system
 Decida quais recursos usar para responder sobre Linux.
 
-COMANDOS: {commands_list}
+COMANDOS DISPONIVEIS: {commands_list}
 
-REGRAS SIMPLES:
-- "ver/mostrar/verificar" + sistema (memoria, disco, usuarios, etc) = use_agent:true
-- "como instalar/configurar" = use_rag:true
-- "problema" + sistema = use_agent:true, use_rag:true
+REGRAS OBRIGATORIAS:
+1. Se a pergunta pede informacao do sistema ATUAL (meu, minha, atual, agora) -> use_agent:true
+2. Se a pergunta menciona IP, rede, interface, memoria, disco, cpu, usuarios -> use_agent:true
+3. Se a pergunta pede executar/rodar/verificar/mostrar algo do sistema -> use_agent:true
+4. Se e tutorial/como fazer/instalacao -> use_rag:true, use_agent:false
+5. Problema + sistema (disco cheio, lento, erro) -> use_agent:true E use_rag:true
 
-EXEMPLOS:
-"quem esta logado" -> use_agent:true, agent_commands:["logged_users"]
-"pode ver a memoria" -> use_agent:true, agent_commands:["memory_detailed"]
-"como instalar docker" -> use_agent:false, use_rag:true
-"disco cheio o que faco" -> use_agent:true, agent_commands:["disk_usage"], use_rag:true
+EXEMPLOS (siga este padrao EXATAMENTE):
 
-JSON (uma linha):
-{{"use_agent":true,"agent_commands":["cmd"],"use_rag":false,"use_web":false,"response_style":"ANALYZE"}}
+Pergunta: "quem esta logado"
+Resposta: {{"use_agent":true,"agent_commands":["logged_users"],"use_rag":false,"use_web":false,"response_style":"ANALYZE"}}
+
+Pergunta: "qual o uso de memoria"
+Resposta: {{"use_agent":true,"agent_commands":["memory_detailed"],"use_rag":false,"use_web":false,"response_style":"ANALYZE"}}
+
+Pergunta: "qual meu IP"
+Resposta: {{"use_agent":true,"agent_commands":["network_info"],"use_rag":false,"use_web":false,"response_style":"ANALYZE"}}
+
+Pergunta: "mostre as informacoes de rede"
+Resposta: {{"use_agent":true,"agent_commands":["network_info"],"use_rag":false,"use_web":false,"response_style":"ANALYZE"}}
+
+Pergunta: "execute ip addr show"
+Resposta: {{"use_agent":true,"agent_commands":["network_info"],"use_rag":false,"use_web":false,"response_style":"ANALYZE"}}
+
+Pergunta: "como instalar docker"
+Resposta: {{"use_agent":false,"agent_commands":[],"use_rag":true,"use_web":false,"response_style":"TUTORIAL"}}
+
+Pergunta: "disco cheio o que faco"
+Resposta: {{"use_agent":true,"agent_commands":["disk_usage"],"use_rag":true,"use_web":false,"response_style":"ANALYZE"}}
+
+Resposta SOMENTE JSON em uma linha, sem texto adicional.
 <|im_end|>
 <|im_start|>user
 {query}
@@ -338,10 +356,10 @@ CONTEXTO DISPONIVEL:
 # FUNCOES DE EXECUCAO
 # =============================================================================
 
-async def call_llm(prompt: str, max_tokens: int = 512, temperature: float = 0.3) -> str:
+async def call_llm(prompt: str, max_tokens: int = 768, temperature: float = 0.3) -> str:
     """Chama o servico de inferencia LLM."""
     try:
-        async with httpx.AsyncClient(timeout=60.0) as client:
+        async with httpx.AsyncClient(timeout=300.0) as client:
             response = await client.post(
                 f"{INFERENCE_URL}/internal/generate",
                 json={
@@ -391,9 +409,30 @@ def parse_json_response(text: str) -> dict:
     # Limpar o texto
     cleaned = text.strip()
     
+    # =========================================================
+    # NORMALIZACAO DE CARACTERES CYRILICOS (Qwen2.5 bug)
+    # =========================================================
+    cyrillic_map = {
+        'а': 'a', 'е': 'e', 'о': 'o', 'р': 'p', 'с': 'c', 'у': 'y', 'х': 'x',
+        'А': 'A', 'Е': 'E', 'О': 'O', 'Р': 'P', 'С': 'C', 'У': 'Y', 'Х': 'X',
+        'В': 'B', 'К': 'K', 'М': 'M', 'Н': 'H', 'Т': 'T',
+        'і': 'i', 'І': 'I',  # Ucraniano
+    }
+    for cyrillic, latin in cyrillic_map.items():
+        cleaned = cleaned.replace(cyrillic, latin)
+    
+    # Cortar texto apos o ultimo } (remover lixo depois do JSON)
+    last_brace = cleaned.rfind('}')
+    if last_brace != -1:
+        cleaned = cleaned[:last_brace + 1]
+    
     # Remover escapes estranhos que o modelo adiciona
     cleaned = cleaned.replace('\\"', '"')
     cleaned = cleaned.replace("\\'", "'")
+    
+    # Corrigir chaves malformadas comuns: "use_rag true":"true" -> "use_rag":true
+    cleaned = re.sub(r'"(\w+)\s+true"\s*:\s*"?true"?', r'"\1":true', cleaned, flags=re.IGNORECASE)
+    cleaned = re.sub(r'"(\w+)\s+false"\s*:\s*"?false"?', r'"\1":false', cleaned, flags=re.IGNORECASE)
     
     # Remover parenteses nas chaves: "(intent)" -> "intent"
     cleaned = re.sub(r'"\((\w+)\)"', r'"\1"', cleaned)
@@ -612,7 +651,7 @@ async def classify_intent(query: str) -> str:
     """
     Classificacao hibrida de intencao:
     1. ML Classifier decide primeiro (rapido)
-    2. LLM valida apenas casos duvidosos
+    2. LLM valida casos duvidosos (confianca baixa)
     
     Retorna: "GREETING", "CASUAL" ou "TECHNICAL"
     """
@@ -668,25 +707,48 @@ async def classify_intent(query: str) -> str:
     # DECISAO
     # =========================================================
     
-    # ML confiante (>= 0.80) -> usa direto
-    if ml_prediction and ml_confidence >= 0.80:
-        logger.info(f"[INTENT] Final: {ml_prediction} (ML confiante)")
-        return ml_prediction
-    
-    # ML deu CASUAL mas query tem palavras técnicas -> valida com LLM
+    # Palavras que indicam problema tecnico (CHECAR ANTES do ML)
     technical_hints = ["memoria", "memória", "disco", "cpu", "rede", "ip", "processo",
                        "servico", "serviço", "log", "usuario", "usuário", "uptime",
-                       "comando", "instalar", "configurar", "executar", "rodar"]
+                       "comando", "instalar", "configurar", "executar", "rodar",
+                       "travando", "lento", "erro", "falha", "problema", "nao funciona",
+                       "não funciona", "parou", "quebrou", "crashou", "tela preta",
+                       "boot", "iniciar", "desligar", "reiniciar", "atualizar",
+                       "computador", "sistema", "linux", "debian", "ubuntu", "terminal",
+                       "interface", "ram", "swap", "particao", "partição", "porta",
+                       "conexao", "conexão", "pacote", "apt", "dpkg", "ssh"]
     
     has_tech_hints = any(h in query_lower for h in technical_hints)
     
-    if ml_prediction == "CASUAL" and has_tech_hints:
-        logger.info(f"[INTENT] ML deu CASUAL mas tem hints tecnicos -> TECHNICAL")
+    # REGRA PRIORITARIA: Se tem palavras tecnicas -> TECHNICAL (mesmo se ML discordar)
+    if has_tech_hints:
+        logger.info(f"[INTENT] Hints tecnicos detectados -> TECHNICAL (override ML)")
         return "TECHNICAL"
     
-    # ML tem resultado razoável -> usa
-    if ml_prediction and ml_confidence >= 0.60:
-        logger.info(f"[INTENT] Final: {ml_prediction} (ML razoavel)")
+    # ML confiante (>= 0.75) E sem hints tecnicos -> usa direto
+    if ml_prediction and ml_confidence >= 0.75:
+        logger.info(f"[INTENT] Final: {ml_prediction} (ML confiante, sem hints tecnicos)")
+        return ml_prediction
+    
+    # =========================================================
+    # VALIDACAO VIA LLM (confianca baixa 0.40-0.75)
+    # =========================================================
+    if ml_prediction and 0.40 <= ml_confidence < 0.75:
+        logger.info(f"[INTENT] Confianca baixa ({ml_confidence:.2f}), validando com LLM...")
+        
+        llm_intent = await validate_intent_with_llm(query)
+        
+        if llm_intent:
+            logger.info(f"[INTENT] LLM confirmou: {llm_intent}")
+            return llm_intent
+        else:
+            # LLM falhou, usa ML mesmo
+            logger.info(f"[INTENT] LLM falhou, usando ML: {ml_prediction}")
+            return ml_prediction
+    
+    # ML tem resultado -> usa
+    if ml_prediction:
+        logger.info(f"[INTENT] Final: {ml_prediction} (ML)")
         return ml_prediction
     
     # =========================================================
@@ -703,9 +765,81 @@ async def classify_intent(query: str) -> str:
         logger.info(f"[INTENT] Final: TECHNICAL (keywords)")
         return "TECHNICAL"
     
-    # Default: CASUAL
+    # Default: validar com LLM antes de assumir CASUAL
+    logger.info(f"[INTENT] Sem classificacao clara, validando com LLM...")
+    llm_intent = await validate_intent_with_llm(query)
+    if llm_intent:
+        logger.info(f"[INTENT] Final: {llm_intent} (LLM fallback)")
+        return llm_intent
+    
     logger.info(f"[INTENT] Final: CASUAL (default)")
     return "CASUAL"
+
+
+async def validate_intent_with_llm(query: str) -> Optional[str]:
+    """
+    Usa o LLM para confirmar a intencao quando ML tem baixa confianca.
+    Retorna: "GREETING", "CASUAL", "TECHNICAL" ou None se falhar
+    """
+    prompt = f"""<|im_start|>system
+Classifique a intencao do usuario em UMA das categorias:
+
+- GREETING: saudacoes, cumprimentos (oi, ola, bom dia)
+- CASUAL: conversa casual, perguntas sobre voce, agradecimentos
+- TECHNICAL: qualquer coisa sobre Linux, computador, sistema, erros, problemas tecnicos, comandos, instalacao, configuracao
+
+Responda APENAS com a palavra: GREETING, CASUAL ou TECHNICAL
+<|im_end|>
+<|im_start|>user
+{query}
+<|im_end|>
+<|im_start|>assistant
+"""
+    
+    try:
+        async with httpx.AsyncClient(timeout=10.0) as client:
+            response = await client.post(
+                f"{INFERENCE_URL}/internal/classify",
+                json={
+                    "prompt": prompt,
+                    "max_tokens": 10,
+                    "temperature": 0.1
+                }
+            )
+            
+            if response.status_code == 200:
+                data = response.json()
+                # Tentar diferentes campos que o LLM pode retornar
+                result = (
+                    data.get("classification") or 
+                    data.get("generated_text") or 
+                    data.get("text") or 
+                    data.get("response") or 
+                    ""
+                ).upper().strip()
+                
+                logger.info(f"[INTENT] LLM response raw: {result[:50]}")
+                
+                # Extrair apenas a primeira palavra valida
+                for word in result.split():
+                    word_clean = word.strip(".,!?\"':-")
+                    if word_clean in ["GREETING", "CASUAL", "TECHNICAL"]:
+                        return word_clean
+                
+                # Tentar encontrar no texto
+                if "TECHNICAL" in result:
+                    return "TECHNICAL"
+                if "CASUAL" in result:
+                    return "CASUAL"
+                if "GREETING" in result:
+                    return "GREETING"
+                
+                logger.warning(f"[INTENT] LLM nao retornou intent valido: {result}")
+                    
+    except Exception as e:
+        logger.error(f"[INTENT] LLM validation error: {e}")
+    
+    return None
 
 
 # =============================================================================
@@ -854,141 +988,15 @@ class ReactOrchestrator:
     
     def _fallback_plan(self, query: str) -> ExecutionPlan:
         """
-        Plano fallback INTELIGENTE quando LLM falha.
-        Analisa a query para decidir os recursos necessarios.
+        Plano fallback SIMPLES quando LLM falha.
+        
+        FILOSOFIA ReAct: O fallback NAO deve tentar ser inteligente.
+        Se o LLM Planner falhou, usamos RAG e deixamos o LLM decidir
+        na geracao da resposta final.
         """
-        q = query.lower()
-        logger.info(f"[FALLBACK] Analisando: {q[:50]}")
+        logger.info(f"[FALLBACK] LLM Planner falhou, usando RAG como fallback ReAct")
         
-        # =====================================================
-        # DETECÇÃO DE PEDIDO DE EXECUÇÃO
-        # =====================================================
-        exec_patterns = [
-            # Verbos de execução
-            "pode ver", "pode mostrar", "pode verificar", "pode executar", "pode rodar",
-            "consegue ver", "consegue mostrar", "consegue verificar",
-            "da pra ver", "dá pra ver", "da pra mostrar",
-            "mostra", "mostre", "verifica", "verifique", "ve ", "vê ",
-            "roda", "rode", "executa", "execute",
-            "como esta", "como está", "como ta", "como tá",
-            "qual ", "quais ", "quem esta", "quem está", "quem ta",
-            "me diz", "me fala", "me mostra",
-        ]
-        
-        wants_execution = any(p in q for p in exec_patterns)
-        
-        # =====================================================
-        # MAPEAMENTO DE PALAVRAS -> COMANDOS
-        # =====================================================
-        keyword_to_cmd = {
-            # Usuarios
-            "logado": "logged_users", "conectado": "logged_users", "usuario": "logged_users",
-            "usuário": "logged_users", "quem esta": "logged_users", "quem está": "logged_users",
-            "who": "logged_users",
-            
-            # Memoria
-            "memoria": "memory_detailed", "memória": "memory_detailed", 
-            "ram": "memory_detailed", "swap": "memory_detailed", "free": "memory_detailed",
-            
-            # Disco
-            "disco": "disk_usage", "espaco": "disk_usage", "espaço": "disk_usage",
-            "particao": "disk_usage", "partição": "disk_usage", "df": "disk_usage",
-            
-            # CPU/Processos
-            "cpu": "cpu_usage", "processador": "cpu_usage",
-            "processo": "processes_top", "processos": "processes_top",
-            "top": "processes_top", "htop": "processes_top",
-            
-            # Rede
-            "rede": "network_info", "ip": "network_info", "network": "network_info",
-            "interface": "network_info", "ifconfig": "network_info",
-            "conexo": "network_connections", "porta": "network_connections",
-            "netstat": "network_connections",
-            
-            # Logs
-            "log": "journalctl", "logs": "journalctl", "journalctl": "journalctl",
-            "erro": "journalctl", "erros": "journalctl",
-            "kernel": "dmesg", "dmesg": "dmesg", "hardware": "dmesg",
-            
-            # Servicos
-            "servico": "systemctl_list", "serviço": "systemctl_list",
-            "servicos": "systemctl_list", "serviços": "systemctl_list",
-            "systemctl": "systemctl_list",
-            "falha": "systemctl_failed", "falhando": "systemctl_failed", "failed": "systemctl_failed",
-            
-            # Sistema
-            "uptime": "uptime", "ligado": "uptime", "tempo ligado": "uptime",
-            "versao": "os_release", "versão": "os_release", "distro": "os_release",
-            
-            # Pacotes
-            "atualizac": "apt_updates", "update": "apt_updates", "upgrade": "apt_updates",
-        }
-        
-        # Encontrar comandos relevantes
-        commands = []
-        for keyword, cmd in keyword_to_cmd.items():
-            if keyword in q and cmd not in commands:
-                commands.append(cmd)
-                logger.info(f"[FALLBACK] Keyword '{keyword}' -> {cmd}")
-        
-        # =====================================================
-        # DETECÇÃO DE TUTORIAL
-        # =====================================================
-        tutorial_patterns = [
-            "como instalar", "como configurar", "como criar", "como fazer",
-            "como remover", "como deletar", "como adicionar",
-            "me ensina", "tutorial", "passo a passo",
-            "o que é", "o que e", "para que serve", "pra que serve",
-            "explica", "explique", "me explica",
-        ]
-        
-        wants_tutorial = any(t in q for t in tutorial_patterns)
-        
-        # =====================================================
-        # DECISÃO DO PLANO
-        # =====================================================
-        
-        # Caso 1: Quer executar algo e encontramos comandos
-        if wants_execution and commands:
-            logger.info(f"[FALLBACK] Execucao detectada: {commands}")
-            return ExecutionPlan(
-                intent="TECHNICAL",
-                use_agent=True,
-                agent_commands=commands[:3],
-                use_rag=False,
-                use_web=False,
-                response_style="ANALYZE",
-                reasoning=f"Fallback: execucao ({', '.join(commands)})"
-            )
-        
-        # Caso 2: Quer tutorial
-        if wants_tutorial:
-            logger.info(f"[FALLBACK] Tutorial detectado")
-            return ExecutionPlan(
-                intent="TECHNICAL",
-                use_agent=False,
-                agent_commands=[],
-                use_rag=True,
-                use_web=False,
-                response_style="TUTORIAL",
-                reasoning="Fallback: tutorial"
-            )
-        
-        # Caso 3: Menciona algo do sistema mas não é claro o que quer
-        if commands:
-            logger.info(f"[FALLBACK] Comandos detectados sem exec explicito: {commands}")
-            return ExecutionPlan(
-                intent="TECHNICAL",
-                use_agent=True,
-                agent_commands=commands[:3],
-                use_rag=True,  # Complementar com documentação
-                use_web=False,
-                response_style="ANALYZE",
-                reasoning=f"Fallback: misto ({', '.join(commands)})"
-            )
-        
-        # Caso 4: Default - só RAG
-        logger.info(f"[FALLBACK] Default: apenas RAG")
+        # Fallback simples: apenas RAG (respeita ReAct)
         return ExecutionPlan(
             intent="TECHNICAL",
             use_agent=False,
@@ -1094,7 +1102,7 @@ class ReactOrchestrator:
         prompt = build_response_prompt(query, context_text, plan.response_style)
         
         try:
-            response = await call_llm(prompt, max_tokens=400, temperature=0.3)
+            response = await call_llm(prompt, max_tokens=600, temperature=0.3)
             return clean_response(response)
         except Exception as e:
             logger.error(f"[REACT] Erro ao gerar resposta: {e}")
