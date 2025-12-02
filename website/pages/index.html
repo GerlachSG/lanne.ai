@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    <script src="../scripts/serviceChecker.js?v=2" defer></script>
+    <script src="../scripts/login.js?v=2" defer></script>
+    <script src="../scripts/logineanimacao.js?v=2" defer></script>
+    <title>Lanne.ai</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Ubuntu:ital,wght@0,300;0,400;0,500;0,700;1,300;1,400;1,500;1,700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../css/index.css">
+</head>
+<body>
+    <div class="container">
+        <p1 id="title">lanne.ai</p1>
+        <p id="subtitle"><i>Eu posso te ajudar em <span class="auto-type"></span></i></p>
+        <button class="button-main" id="showCardBtn"></button>
+    </div>
+
+    <!-- Título que será exibido à esquerda -->
+    <div id="left-title">
+        <p1>lanne.ai</p1>
+    </div>
+
+    <!-- Card que será exibido ao clicar no botão -->
+    <div id="card" class="card">
+        <img src="../imagens/seta_vetor.svg" alt="Icone" id="backButton" class="card-icon">
+        <h1 id="hideEntrar" class="titulo">Encontre a solução para o erro para Linux que precisa!</h1>
+        <p3 id="hideEntrar2"> Pronta para te ajudar, <b>Pergunte</b> ou <b>Envie uma Imagem</b> a <i>lanne.ai</i> será seu braço direito para correções de erros, dúvidas e muito mais.</p>
+
+        <div class="button-wrapper">
+            <button id="bEntrar" class="card-button">entrar</button>
+            <button class="card-button2">conhecer</button>
+        </div>
+
+    </div>
+
+    
+    <script src="https://unpkg.com/typed.js@2.1.0/dist/typed.umd.js"></script>
+    <script>
+        // ANIMAÇÃO DE TEXTO ESCREVENDO
+        var typed = new Typed(".auto-type", { // Corrigido de 'typed' para 'Typed'
+            strings: ["tudo sobre Linux!", "correção de erros", "instalar pacotes", "dicas de segurança", "melhoria de desempenho"],
+            typeSpeed: 90,
+            backSpeed: 50,
+            loop: true
+        });
+    </script>
+
+    <!-- Card é controlado por logineanimacao.js; removido conteúdo antigo de Facebook/Google -->
+<script>
+
+    // ANIMAÇÃO DE SAIR O CARD
+    document.getElementById('backButton').addEventListener('click', function() {
+        document.getElementById('card').classList.toggle('show');
+        document.getElementById('title').classList.remove('hide');
+        document.getElementById('subtitle').classList.remove('hide');
+        document.getElementById('showCardBtn').classList.remove('hide');
+
+        // Oculta o título "Lanne.ai" no lado esquerdo
+        document.getElementById('left-title').classList.remove('show');
+        document.getElementById('left-title').classList.add('hide');
+    });
+
+    
+// ANIMAÇÃO DE APARECER O CARD
+document.getElementById('showCardBtn').addEventListener('click', function() {
+    const button = this;
+    // Adiciona a classe 'disabled' para impedir cliques
+    button.classList.add('disabled');
+    document.getElementById('card').classList.toggle('show');
+    document.getElementById('title').classList.add('hide');
+    document.getElementById('subtitle').classList.add('hide');
+    button.classList.add('hide');
+
+    document.getElementById('left-title').classList.remove('hide');
+    document.getElementById('left-title').classList.add('show');
+    const animationDuration = 900;
+    setTimeout(() => {
+        button.classList.remove('disabled'); 
+        button.classList.remove('hide');
+    }, animationDuration);
+});
+</script>
+
+    <script>
+        document.querySelector('.card-button2').addEventListener('click', function() {
+            alert('Em breve');
+        });
+    </script>
+
+</body>
+</html>
